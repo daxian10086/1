@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvShaking: TextView
     private lateinit var ivShaking: ImageView
     private lateinit var ivStickOut: ImageView
+    private lateinit var layoutShaking: FrameLayout
     private lateinit var layoutTitle: LinearLayout
 
     private var isAnimating = false
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         tvShaking = findViewById(R.id.tvShaking)
         ivShaking = findViewById(R.id.ivShaking)
         ivStickOut = findViewById(R.id.ivStickOut)
+        layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
     }
 
@@ -77,8 +79,8 @@ class MainActivity : AppCompatActivity() {
         cardResult.visibility = View.GONE
         
         // 恢复摇卦动画区域高度
-        ivShaking.layoutParams.height = 200 // 恢复原始高度
-        ivShaking.requestLayout()
+        layoutShaking.layoutParams.height = 200
+        layoutShaking.requestLayout()
         
         // 显示摇卦动画
         showShakingAnimation()
@@ -154,9 +156,9 @@ class MainActivity : AppCompatActivity() {
         ivStickOut.visibility = View.GONE
         tvShaking.clearAnimation()
         
-        // 隐藏摇卦动画区域
-        ivShaking.layoutParams.height = 0
-        ivShaking.requestLayout()
+        // 缩回摇卦动画区域
+        layoutShaking.layoutParams.height = 0
+        layoutShaking.requestLayout()
         
         // 随机生成卦象
         val hexagram = HexagramGenerator.randomHexagram()
