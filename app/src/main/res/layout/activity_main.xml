@@ -227,6 +227,19 @@
                     android:layout_marginTop="12dp"
                     android:orientation="vertical" />
 
+                <!-- 多维度运势解读 -->
+                <TextView
+                    android:id="@+id/tvFortuneAnalysis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="#F0F8FF"
+                    android:lineSpacingExtra="3dp"
+                    android:padding="16dp"
+                    android:textColor="#333"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
                 <!-- 选中的爻 -->
                 <TextView
                     android:id="@+id/tvSelectedLine"

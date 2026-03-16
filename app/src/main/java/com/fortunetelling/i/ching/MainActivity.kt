@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvOverallMeaning: TextView
     private lateinit var layoutLines: LinearLayout
     private lateinit var tvSelectedLine: TextView
+    private lateinit var tvFortuneAnalysis: TextView
     private lateinit var tvShaking: TextView
     private lateinit var ivShaking: ImageView
     private lateinit var ivStickOut: ImageView
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         ivStickOut = findViewById(R.id.ivStickOut)
         layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
+        tvFortuneAnalysis = findViewById(R.id.tvFortuneAnalysis)
     }
 
     private fun setupClickListener() {
@@ -197,6 +199,9 @@ class MainActivity : AppCompatActivity() {
         tvSelectedLine.text = "【解卦】$selectedLineName：$selectedLineText\n\n$selectedLineDesc"
         tvSelectedLine.visibility = View.VISIBLE
 
+        // 显示多维度运势解读
+        displayFortuneAnalysis(hexagram, selectedLineName)
+
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {
             duration = 500
@@ -205,6 +210,26 @@ class MainActivity : AppCompatActivity() {
 
         // 显示结果卡片
         showResultCard()
+    }
+
+    private fun displayFortuneAnalysis(hexagram: Hexagram, lineName: String) {
+        // 根据爻名获取索引
+        val lineIndex = when(lineName) {
+            "初爻" -> 0
+            "二爻" -> 1
+            "三爻" -> 2
+            "四爻" -> 3
+            "五爻" -> 4
+            "上爻" -> 5
+            else -> 0
+        }
+        
+        // 获取多维度解读
+        val fortuneAnalysis = hexagram.getFortuneAnalysis(lineIndex)
+        
+        // 显示多维度解读
+        tvFortuneAnalysis.text = fortuneAnalysis
+        tvFortuneAnalysis.visibility = View.VISIBLE
     }
 
     private fun displayLines(hexagram: Hexagram) {
