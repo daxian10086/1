@@ -38,8 +38,10 @@ class MainActivity : AppCompatActivity() {
 
     // 选项页
     private lateinit var tabLines: TextView
+    private lateinit var tabSelected: TextView
     private lateinit var tabFortune: TextView
     private lateinit var pageLines: LinearLayout
+    private lateinit var pageSelected: LinearLayout
     private lateinit var pageFortune: LinearLayout
 
     // 运势卡片
@@ -52,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStockContent: TextView
 
     private var isAnimating = false
-    private var currentTab = 0 // 0=六爻详解, 1=运势解读
+    private var currentTab = 0 // 0=六爻详解, 1=选中爻, 2=运势解读
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,8 +83,10 @@ class MainActivity : AppCompatActivity() {
 
         // 选项页
         tabLines = findViewById(R.id.tabLines)
+        tabSelected = findViewById(R.id.tabSelected)
         tabFortune = findViewById(R.id.tabFortune)
         pageLines = findViewById(R.id.pageLines)
+        pageSelected = findViewById(R.id.pageSelected)
         pageFortune = findViewById(R.id.pageFortune)
 
         // 运势内容
@@ -104,7 +108,8 @@ class MainActivity : AppCompatActivity() {
 
         // 选项页切换
         tabLines.setOnClickListener { switchTab(0) }
-        tabFortune.setOnClickListener { switchTab(1) }
+        tabSelected.setOnClickListener { switchTab(1) }
+        tabFortune.setOnClickListener { switchTab(2) }
 
         // 设置运势卡片点击折叠/展开
         setupFoldableCard(R.id.cardLove, R.id.tvLoveTitle, R.id.tvLoveContent)
@@ -118,22 +123,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun switchTab(tab: Int) {
         currentTab = tab
-        if (tab == 0) {
-            // 六爻详解
-            tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
-            tabLines.setTextColor(Color.parseColor("#8B4513"))
-            tabFortune.setBackgroundColor(Color.parseColor("#F5F5DC"))
-            tabFortune.setTextColor(Color.parseColor("#666666"))
-            pageLines.visibility = View.VISIBLE
-            pageFortune.visibility = View.GONE
-        } else {
-            // 运势解读
-            tabLines.setBackgroundColor(Color.parseColor("#F5F5DC"))
-            tabLines.setTextColor(Color.parseColor("#666666"))
-            tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
-            tabFortune.setTextColor(Color.parseColor("#8B4513"))
-            pageLines.visibility = View.GONE
-            pageFortune.visibility = View.VISIBLE
+        // 重置所有tab样式
+        tabLines.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabLines.setTextColor(Color.parseColor("#666666"))
+        tabSelected.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabSelected.setTextColor(Color.parseColor("#666666"))
+        tabFortune.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabFortune.setTextColor(Color.parseColor("#666666"))
+        
+        // 隐藏所有页面
+        pageLines.visibility = View.GONE
+        pageSelected.visibility = View.GONE
+        pageFortune.visibility = View.GONE
+        
+        when(tab) {
+            0 -> {
+                // 六爻详解
+                tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabLines.setTextColor(Color.parseColor("#8B4513"))
+                pageLines.visibility = View.VISIBLE
+            }
+            1 -> {
+                // 选中爻
+                tabSelected.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabSelected.setTextColor(Color.parseColor("#8B4513"))
+                pageSelected.visibility = View.VISIBLE
+            }
+            2 -> {
+                // 运势解读
+                tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabFortune.setTextColor(Color.parseColor("#8B4513"))
+                pageFortune.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -273,9 +294,8 @@ class MainActivity : AppCompatActivity() {
         // 显示六爻
         displayLines(hexagram)
 
-        // 显示选中的爻
+        // 显示选中的爻 (放到选中爻页面)
         tvSelectedLine.text = "【解卦】$selectedLineName：$selectedLineText\n\n$selectedLineDesc"
-        tvSelectedLine.visibility = View.VISIBLE
 
         // 显示多维度运势解读
         displayFortuneAnalysis(hexagram, selectedLineName)
@@ -286,7 +306,7 @@ class MainActivity : AppCompatActivity() {
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {
             duration = 500
-            tvSelectedLine.startAnimation(this)
+            layoutLines.getChildAt(0)?.startAnimation(this)
         }
 
         // 显示结果卡片
