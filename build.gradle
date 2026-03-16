@@ -10,9 +10,5 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+rootProject.name = "I Ching Fortune Teller"
+include ':app'
