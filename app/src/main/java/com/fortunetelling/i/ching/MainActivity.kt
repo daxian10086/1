@@ -334,14 +334,23 @@ class MainActivity : AppCompatActivity() {
         tvRelationContent.text = hexagram.getRelationFortune(lineIndex)
         tvStockContent.text = hexagram.getStockFortune(lineIndex)
         
-        // 显示所有卡片
-        tvLoveContent.visibility = View.VISIBLE
-        tvCareerContent.visibility = View.VISIBLE
-        tvWealthContent.visibility = View.VISIBLE
-        tvHealthContent.visibility = View.VISIBLE
-        tvFamilyContent.visibility = View.VISIBLE
-        tvRelationContent.visibility = View.VISIBLE
-        tvStockContent.visibility = View.VISIBLE
+        // 默认折叠所有卡片
+        tvLoveContent.visibility = View.GONE
+        tvCareerContent.visibility = View.GONE
+        tvWealthContent.visibility = View.GONE
+        tvHealthContent.visibility = View.GONE
+        tvFamilyContent.visibility = View.GONE
+        tvRelationContent.visibility = View.GONE
+        tvStockContent.visibility = View.GONE
+        
+        // 更新标题显示状态
+        findViewById<TextView>(R.id.tvLoveTitle).text = "💕 爱情运势 ▶"
+        findViewById<TextView>(R.id.tvCareerTitle).text = "💼 事业运势 ▶"
+        findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运运势 ▶"
+        findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康运势 ▶"
+        findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭运势 ▶"
+        findViewById<TextView>(R.id.tvRelationTitle).text = "🤝 人际关系 ▶"
+        findViewById<TextView>(R.id.tvStockTitle).text = "📊 投资理财 ▶"
     }
 
     private fun displayLines(hexagram: Hexagram) {

@@ -310,7 +310,7 @@
                             android:id="@+id/tvLoveTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="💕 爱情运势 ▼"
+                            android:text="💕 爱情运势 ▶"
                             android:textColor="#E91E63"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -339,7 +339,7 @@
                             android:id="@+id/tvCareerTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="💼 事业运势 ▼"
+                            android:text="💼 事业运势 ▶"
                             android:textColor="#2196F3"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -368,7 +368,7 @@
                             android:id="@+id/tvWealthTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="💰 财运运势 ▼"
+                            android:text="💰 财运运势 ▶"
                             android:textColor="#FF9800"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -397,7 +397,7 @@
                             android:id="@+id/tvHealthTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="🏃 健康运势 ▼"
+                            android:text="🏃 健康运势 ▶"
                             android:textColor="#4CAF50"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -426,7 +426,7 @@
                             android:id="@+id/tvFamilyTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="🏠 家庭运势 ▼"
+                            android:text="🏠 家庭运势 ▶"
                             android:textColor="#9C27B0"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -455,7 +455,7 @@
                             android:id="@+id/tvRelationTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="🤝 人际关系 ▼"
+                            android:text="🤝 人际关系 ▶"
                             android:textColor="#00BCD4"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -484,7 +484,7 @@
                             android:id="@+id/tvStockTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="📊 投资理财 ▼"
+                            android:text="📊 投资理财 ▶"
                             android:textColor="#795548"
                             android:textSize="15sp"
                             android:textStyle="bold" />
