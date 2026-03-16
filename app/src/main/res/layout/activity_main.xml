@@ -40,15 +40,31 @@
 
         </LinearLayout>
 
-        <!-- 摇卦提示 -->
-        <ImageView
-            android:id="@+id/ivShaking"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="32dp"
-            android:src="@drawable/ic_shaking"
-            android:visibility="gone" />
+        <!-- 摇卦动画区域 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="32dp">
+
+            <!-- 摇桶图片 -->
+            <ImageView
+                android:id="@+id/ivShaking"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_shaking"
+                android:visibility="gone" />
+
+            <!-- 掉出的签 -->
+            <ImageView
+                android:id="@+id/ivStickOut"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_stick_out"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvShaking"

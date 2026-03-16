@@ -3,9 +3,13 @@ package com.fortunetelling.i.ching
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AlphaAnimation
+import android.view.animation.TranslateAnimation
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -27,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvSelectedLine: TextView
     private lateinit var tvShaking: TextView
     private lateinit var ivShaking: ImageView
+    private lateinit var ivStickOut: ImageView
     private lateinit var layoutTitle: LinearLayout
 
     private var isAnimating = false
@@ -52,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         tvSelectedLine = findViewById(R.id.tvSelectedLine)
         tvShaking = findViewById(R.id.tvShaking)
         ivShaking = findViewById(R.id.ivShaking)
+        ivStickOut = findViewById(R.id.ivStickOut)
         layoutTitle = findViewById(R.id.layoutTitle)
     }
 
@@ -75,27 +81,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showShakingAnimation() {
-        // 显示摇卦提示
-        tvShaking.visibility = View.VISIBLE
+        // 显示摇桶
         ivShaking.visibility = View.VISIBLE
+        ivStickOut.visibility = View.GONE
+        tvShaking.visibility = View.VISIBLE
         tvShaking.text = "摇卦中..."
         
-        // 创建一个组合动画，让图标摇晃
+        // 摇晃动画
         val shakeAnimator = AnimatorSet()
         
-        val rotate1 = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -15f, 15f, -15f, 15f, -15f, 15f, 0f)
-        val translateX1 = ObjectAnimator.ofFloat(ivShaking, "translationX", 0f, 20f, -20f, 20f, -20f, 20f, 0f)
+        val rotate1 = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -10f, 10f, -10f, 10f, -10f, 10f, 0f)
+        val translateX1 = ObjectAnimator.ofFloat(ivShaking, "translationX", 0f, 15f, -15f, 15f, -15f, 15f, 0f)
         
         shakeAnimator.playTogether(rotate1, translateX1)
-        shakeAnimator.duration = 2000 // 2秒
+        shakeAnimator.duration = 1500 // 1.5秒摇晃
         shakeAnimator.interpolator = AccelerateDecelerateInterpolator()
         
-        // 动画监听
         shakeAnimator.addListener(object : android.animation.Animator.AnimatorListener {
             override fun onAnimationStart(animation: android.animation.Animator) {}
             override fun onAnimationEnd(animation: android.animation.Animator) {
-                // 动画结束后显示结果
-                displayResult()
+                // 摇晃结束后，显示签掉出
+                showStickFalling()
             }
             override fun onAnimationCancel(animation: android.animation.Animator) {}
             override fun onAnimationRepeat(animation: android.animation.Animator) {}
@@ -105,17 +111,43 @@ class MainActivity : AppCompatActivity() {
         
         // 文字闪烁效果
         val blinkAnimator = AlphaAnimation(1f, 0.3f).apply {
-            duration = 200
+            duration = 150
             repeatMode = android.view.animation.Animation.REVERSE
             repeatCount = 9
         }
         tvShaking.startAnimation(blinkAnimator)
     }
 
+    private fun showStickFalling() {
+        // 隐藏摇桶，显示签掉出
+        ivShaking.visibility = View.GONE
+        ivStickOut.visibility = View.VISIBLE
+        
+        // 签掉出动画
+        val dropAnimator = ObjectAnimator.ofFloat(ivStickOut, "translationY", -50f, 0f)
+        dropAnimator.duration = 500
+        dropAnimator.interpolator = AccelerateDecelerateInterpolator()
+        
+        dropAnimator.addListener(object : android.animation.Animator.AnimatorListener {
+            override fun onAnimationStart(animation: android.animation.Animator) {}
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                // 动画结束后显示结果
+                Handler(mainLooper).postDelayed({
+                    displayResult()
+                }, 500)
+            }
+            override fun onAnimationCancel(animation: android.animation.Animator) {}
+            override fun onAnimationRepeat(animation: android.animation.Animator) {}
+        })
+        
+        dropAnimator.start()
+    }
+
     private fun displayResult() {
         // 隐藏摇卦提示
         tvShaking.visibility = View.GONE
         ivShaking.visibility = View.GONE
+        ivStickOut.visibility = View.GONE
         tvShaking.clearAnimation()
         
         // 随机生成卦象
