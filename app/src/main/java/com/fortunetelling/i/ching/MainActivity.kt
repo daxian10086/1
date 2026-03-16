@@ -8,19 +8,19 @@ import android.os.Looper
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AlphaAnimation
-import android.view.animation.TranslateAnimation
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import com.google.android.material.button.MaterialButton
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btnCastHexagram: MaterialButton
-    private lateinit var cardResult: androidx.cardview.widget.CardView
+    private lateinit var cardResult: CardView
     private lateinit var tvHexagramNumber: TextView
     private lateinit var tvHexagramName: TextView
     private lateinit var tvSelectedLineName: TextView
@@ -29,12 +29,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvOverallMeaning: TextView
     private lateinit var layoutLines: LinearLayout
     private lateinit var tvSelectedLine: TextView
-    private lateinit var tvFortuneAnalysis: TextView
     private lateinit var tvShaking: TextView
     private lateinit var ivShaking: ImageView
     private lateinit var ivStickOut: ImageView
     private lateinit var layoutShaking: FrameLayout
     private lateinit var layoutTitle: LinearLayout
+
+    // 运势卡片
+    private lateinit var tvLoveContent: TextView
+    private lateinit var tvCareerContent: TextView
+    private lateinit var tvWealthContent: TextView
+    private lateinit var tvHealthContent: TextView
+    private lateinit var tvFamilyContent: TextView
+    private lateinit var tvRelationContent: TextView
+    private lateinit var tvStockContent: TextView
 
     private var isAnimating = false
 
@@ -43,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initViews()
-        setupClickListener()
+        setupClickListeners()
     }
 
     private fun initViews() {
@@ -62,13 +70,46 @@ class MainActivity : AppCompatActivity() {
         ivStickOut = findViewById(R.id.ivStickOut)
         layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
-        tvFortuneAnalysis = findViewById(R.id.tvFortuneAnalysis)
+
+        // 运势内容
+        tvLoveContent = findViewById(R.id.tvLoveContent)
+        tvCareerContent = findViewById(R.id.tvCareerContent)
+        tvWealthContent = findViewById(R.id.tvWealthContent)
+        tvHealthContent = findViewById(R.id.tvHealthContent)
+        tvFamilyContent = findViewById(R.id.tvFamilyContent)
+        tvRelationContent = findViewById(R.id.tvRelationContent)
+        tvStockContent = findViewById(R.id.tvStockContent)
     }
 
-    private fun setupClickListener() {
+    private fun setupClickListeners() {
         btnCastHexagram.setOnClickListener {
             if (!isAnimating) {
                 castHexagram()
+            }
+        }
+
+        // 设置运势卡片点击折叠/展开
+        setupFoldableCard(R.id.cardLove, R.id.tvLoveTitle, R.id.tvLoveContent)
+        setupFoldableCard(R.id.cardCareer, R.id.tvCareerTitle, R.id.tvCareerContent)
+        setupFoldableCard(R.id.cardWealth, R.id.tvWealthTitle, R.id.tvWealthContent)
+        setupFoldableCard(R.id.cardHealth, R.id.tvHealthTitle, R.id.tvHealthContent)
+        setupFoldableCard(R.id.cardFamily, R.id.tvFamilyTitle, R.id.tvFamilyContent)
+        setupFoldableCard(R.id.cardRelation, R.id.tvRelationTitle, R.id.tvRelationContent)
+        setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
+    }
+
+    private fun setupFoldableCard(cardId: Int, titleId: Int, contentId: Int) {
+        val card = findViewById<LinearLayout>(cardId)
+        val title = findViewById<TextView>(titleId)
+        val content = findViewById<TextView>(contentId)
+        
+        card.setOnClickListener {
+            if (content.visibility == View.VISIBLE) {
+                content.visibility = View.GONE
+                title.text = title.text.toString().replace("▼", "▶")
+            } else {
+                content.visibility = View.VISIBLE
+                title.text = title.text.toString().replace("▶", "▼")
             }
         }
     }
@@ -102,13 +143,12 @@ class MainActivity : AppCompatActivity() {
         val translateX1 = ObjectAnimator.ofFloat(ivShaking, "translationX", 0f, 15f, -15f, 15f, -15f, 15f, 0f)
         
         shakeAnimator.playTogether(rotate1, translateX1)
-        shakeAnimator.duration = 1500 // 1.5秒摇晃
+        shakeAnimator.duration = 1500
         shakeAnimator.interpolator = AccelerateDecelerateInterpolator()
         
         shakeAnimator.addListener(object : android.animation.Animator.AnimatorListener {
             override fun onAnimationStart(animation: android.animation.Animator) {}
             override fun onAnimationEnd(animation: android.animation.Animator) {
-                // 摇晃结束后，显示签掉出
                 showStickFalling()
             }
             override fun onAnimationCancel(animation: android.animation.Animator) {}
@@ -139,8 +179,7 @@ class MainActivity : AppCompatActivity() {
         dropAnimator.addListener(object : android.animation.Animator.AnimatorListener {
             override fun onAnimationStart(animation: android.animation.Animator) {}
             override fun onAnimationEnd(animation: android.animation.Animator) {
-                // 动画结束后显示结果
-                Handler(mainLooper).postDelayed({
+                Handler(Looper.getMainLooper()).postDelayed({
                     displayResult()
                 }, 500)
             }
@@ -224,12 +263,23 @@ class MainActivity : AppCompatActivity() {
             else -> 0
         }
         
-        // 获取多维度解读
-        val fortuneAnalysis = hexagram.getFortuneAnalysis(lineIndex)
+        // 设置各维度运势内容
+        tvLoveContent.text = hexagram.getLoveFortune(lineIndex)
+        tvCareerContent.text = hexagram.getCareerFortune(lineIndex)
+        tvWealthContent.text = hexagram.getWealthFortune(lineIndex)
+        tvHealthContent.text = hexagram.getHealthFortune(lineIndex)
+        tvFamilyContent.text = hexagram.getFamilyFortune(lineIndex)
+        tvRelationContent.text = hexagram.getRelationFortune(lineIndex)
+        tvStockContent.text = hexagram.getStockFortune(lineIndex)
         
-        // 显示多维度解读
-        tvFortuneAnalysis.text = fortuneAnalysis
-        tvFortuneAnalysis.visibility = View.VISIBLE
+        // 显示所有卡片
+        tvLoveContent.visibility = View.VISIBLE
+        tvCareerContent.visibility = View.VISIBLE
+        tvWealthContent.visibility = View.VISIBLE
+        tvHealthContent.visibility = View.VISIBLE
+        tvFamilyContent.visibility = View.VISIBLE
+        tvRelationContent.visibility = View.VISIBLE
+        tvStockContent.visibility = View.VISIBLE
     }
 
     private fun displayLines(hexagram: Hexagram) {

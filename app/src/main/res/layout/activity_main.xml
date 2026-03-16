@@ -226,18 +226,232 @@
                     android:orientation="vertical" />
 
                 <!-- 多维度运势解读 -->
-                <TextView
-                    android:id="@+id/tvFortuneAnalysis"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:background="@drawable/bg_fortune_card"
-                    android:lineSpacingExtra="4dp"
-                    android:padding="16dp"
-                    android:textColor="#333"
-                    android:textSize="13sp"
-                    android:fontFamily="monospace"
-                    android:visibility="gone" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="📊 多维度运势解读"
+                        android:textColor="#8B4513"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- 爱情运势 -->
+                    <LinearLayout
+                        android:id="@+id/cardLove"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvLoveTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="💕 爱情运势 ▼"
+                            android:textColor="#E91E63"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvLoveContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 事业运势 -->
+                    <LinearLayout
+                        android:id="@+id/cardCareer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvCareerTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="💼 事业运势 ▼"
+                            android:textColor="#2196F3"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvCareerContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 财运运势 -->
+                    <LinearLayout
+                        android:id="@+id/cardWealth"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvWealthTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="💰 财运运势 ▼"
+                            android:textColor="#FF9800"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvWealthContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 健康运势 -->
+                    <LinearLayout
+                        android:id="@+id/cardHealth"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvHealthTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="🏃 健康运势 ▼"
+                            android:textColor="#4CAF50"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvHealthContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 家庭运势 -->
+                    <LinearLayout
+                        android:id="@+id/cardFamily"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvFamilyTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="🏠 家庭运势 ▼"
+                            android:textColor="#9C27B0"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvFamilyContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 人际关系 -->
+                    <LinearLayout
+                        android:id="@+id/cardRelation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvRelationTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="🤝 人际关系 ▼"
+                            android:textColor="#00BCD4"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvRelationContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- 投资理财 -->
+                    <LinearLayout
+                        android:id="@+id/cardStock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_fortune_item"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tvStockTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📊 投资理财 ▼"
+                            android:textColor="#795548"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvStockContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textColor="#333"
+                            android:lineSpacingExtra="2dp"
+                            android:visibility="visible" />
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <!-- 选中的爻 -->
                 <TextView
