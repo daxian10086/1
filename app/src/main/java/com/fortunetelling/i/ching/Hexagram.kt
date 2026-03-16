@@ -38,7 +38,7 @@ data class Hexagram(
         val stockFortune = generateStockFortune(lineIndex)
         
         return """
-【$linePosition多维度运势解读】
+【${linePosition}多维度运势解读】
 
 🌹 爱情运势
 $loveFortune
