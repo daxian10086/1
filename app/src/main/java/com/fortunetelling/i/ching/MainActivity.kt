@@ -76,6 +76,10 @@ class MainActivity : AppCompatActivity() {
         // 隐藏之前的结果
         cardResult.visibility = View.GONE
         
+        // 恢复摇卦动画区域高度
+        ivShaking.layoutParams.height = 200 // 恢复原始高度
+        ivShaking.requestLayout()
+        
         // 显示摇卦动画
         showShakingAnimation()
     }
@@ -149,6 +153,10 @@ class MainActivity : AppCompatActivity() {
         ivShaking.visibility = View.GONE
         ivStickOut.visibility = View.GONE
         tvShaking.clearAnimation()
+        
+        // 隐藏摇卦动画区域
+        ivShaking.layoutParams.height = 0
+        ivShaking.requestLayout()
         
         // 随机生成卦象
         val hexagram = HexagramGenerator.randomHexagram()
