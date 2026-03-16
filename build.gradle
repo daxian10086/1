@@ -10,5 +10,4 @@ buildscript {
     }
 }
 
-rootProject.name = "I Ching Fortune Teller"
 include ':app'
