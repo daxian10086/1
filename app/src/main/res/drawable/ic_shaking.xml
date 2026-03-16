@@ -3,38 +3,98 @@
     android:height="200dp"
     android:viewportWidth="200"
     android:viewportHeight="200">
-    <!-- 签桶 -->
+    <!-- 签桶阴影 -->
+    <ellipse
+        android:fillColor="#5D3A1A"
+        android:cx="100"
+        android:cy="170"
+        android:rx="35"
+        android:ry="10" />
+    
+    <!-- 签桶底部 -->
     <path
         android:fillColor="#8B4513"
-        android:pathData="M70,60 L130,60 L125,180 L75,180 Z" />
-    <!-- 签桶内壁 -->
+        android:pathData="M70,50 L130,50 L128,165 L72,165 Z" />
+    <!-- 签桶底部阴影 -->
     <path
         android:fillColor="#A0522D"
-        android:pathData="M75,65 L125,65 L122,175 L78,175 Z" />
-    <!-- 签条堆 - 多根签 -->
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M80,70 L82,140 L88,140 L90,70 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M92,68 L94,145 L100,145 L102,68 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M104,70 L106,142 L112,142 L114,70 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M116,72 L118,138 L124,138 L126,72 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M85,75 L87,135 L93,135 L95,75 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M97,73 L99,140 L105,140 L107,73 Z" />
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M109,75 L111,137 L117,137 L119,75 Z" />
-    <!-- 签桶边缘 -->
+        android:pathData="M72,55 L128,55 L126,160 L74,160 Z" />
+    
+    <!-- 签桶顶部边缘 -->
     <path
         android:fillColor="#5D3A1A"
-        android:pathData="M68,55 L132,55 L130,65 L70,65 Z" />
+        android:pathData="M65,45 L135,45 L130,55 L70,55 Z" />
+    <!-- 签桶顶部装饰 -->
+    <rect
+        android:fillColor="#FFD700"
+        android:x="68"
+        android:y="40"
+        android:width="64"
+        android:height="8"
+        android:rx="2" />
+    
+    <!-- 签条 - 金色 -->
+    <!-- 第1签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M80,60 L83,120 L88,120 L91,60 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M80,60 L83,120 L83,125 L80,125 Z" />
+    <!-- 第2签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M92,55 L95,125 L100,125 L103,55 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M92,55 L95,125 L95,130 L92,130 Z" />
+    <!-- 第3签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M104,58 L107,122 L112,122 L115,58 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M104,58 L107,122 L107,127 L104,127 Z" />
+    <!-- 第4签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M116,62 L119,118 L124,118 L127,62 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M116,62 L119,118 L119,123 L116,123 Z" />
+    <!-- 第5签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M75,65 L78,115 L83,115 L86,65 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M75,65 L78,115 L78,120 L75,120 Z" />
+    <!-- 第6签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M88,63 L91,118 L96,118 L99,63 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="MM88,63 L91,118 L91,123 L88,123 Z" />
+    <!-- 第7签 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M100,60 L103,120 L108,120 L111,60 Z" />
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M100,60 L103,120 L103,125 L100,125 Z" />
+    
+    <!-- 签桶装饰线 -->
+    <path
+        android:stroke="#5D3A1A"
+        android:strokeWidth="2"
+        android:pathData="M72,60 L74,160" />
+    <path
+        android:stroke="#5D3A1A"
+        android:strokeWidth="2"
+        android:pathData="M128,60 L126,160" />
+    <path
+        android:stroke="#5D3A1A"
+        android:strokeWidth="2"
+        android:pathData="M70,55 L130,55" />
 </vector>
