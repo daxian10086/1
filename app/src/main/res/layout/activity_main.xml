@@ -50,8 +50,8 @@
             <!-- 摇桶图片 -->
             <ImageView
                 android:id="@+id/ivShaking"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_shaking"
                 android:visibility="gone" />
@@ -59,8 +59,8 @@
             <!-- 掉出的签 -->
             <ImageView
                 android:id="@+id/ivStickOut"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_stick_out"
                 android:visibility="gone" />
