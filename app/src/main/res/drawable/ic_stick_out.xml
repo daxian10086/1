@@ -2,7 +2,7 @@
     android:width="200dp"
     android:height="200dp"
     android:viewportWidth="200"
-    android:viewportheight="200">
+    android:viewportHeight="200">
     <!-- 签桶阴影 -->
     <ellipse
         android:fillColor="#5D3A1A"
@@ -41,7 +41,7 @@
         android:pathData="M92,55 L95,115 L100,115 L103,55 Z" />
     <path
         android:fillColor="#FFA500"
-        android:android:pathData="M92,55 L95,115 L95,120 L92,120 Z" />
+        android:pathData="M92,55 L95,115 L95,120 L92,120 Z" />
     <path
         android:fillColor="#FFD700"
         android:pathData="M104,58 L107,112 L112,112 L115,58 Z" />
@@ -50,7 +50,7 @@
         android:pathData="M104,58 L107,112 L107,117 L104,117 Z" />
     <path
         android:fillColor="#FFD700"
-        android:pathM="M116,62 L119,108 L124,108 L127,62 Z" />
+        android:pathData="M116,62 L119,108 L124,108 L127,62 Z" />
     <path
         android:fillColor="#FFA500"
         android:pathData="M116,62 L119,108 L119,113 L116,113 Z" />
@@ -87,7 +87,7 @@
         android:strokeWidth="2"
         android:pathData="M147,35 L148,130" />
     <path
-        android:android:stroke="#FFA500"
+        android:stroke="#FFA500"
         android:strokeWidth="2"
         android:pathData="M152,35 L153,130" />
     <path
