@@ -1,7 +1,12 @@
 package com.fortunetelling.i.ching
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AlphaAnimation
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -15,11 +20,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cardResult: androidx.cardview.widget.CardView
     private lateinit var tvHexagramNumber: TextView
     private lateinit var tvHexagramName: TextView
+    private lateinit var tvSelectedLineName: TextView
     private lateinit var tvUpperTrigram: TextView
     private lateinit var tvLowerTrigram: TextView
     private lateinit var tvOverallMeaning: TextView
     private lateinit var layoutLines: LinearLayout
     private lateinit var tvSelectedLine: TextView
+    private lateinit var tvShaking: TextView
+    private lateinit var layoutTitle: LinearLayout
+
+    private var isAnimating = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,20 +44,77 @@ class MainActivity : AppCompatActivity() {
         cardResult = findViewById(R.id.cardResult)
         tvHexagramNumber = findViewById(R.id.tvHexagramNumber)
         tvHexagramName = findViewById(R.id.tvHexagramName)
+        tvSelectedLineName = findViewById(R.id.tvSelectedLineName)
         tvUpperTrigram = findViewById(R.id.tvUpperTrigram)
         tvLowerTrigram = findViewById(R.id.tvLowerTrigram)
         tvOverallMeaning = findViewById(R.id.tvOverallMeaning)
         layoutLines = findViewById(R.id.layoutLines)
         tvSelectedLine = findViewById(R.id.tvSelectedLine)
+        tvShaking = findViewById(R.id.tvShaking)
+        layoutTitle = findViewById(R.id.layoutTitle)
     }
 
     private fun setupClickListener() {
         btnCastHexagram.setOnClickListener {
-            castHexagram()
+            if (!isAnimating) {
+                castHexagram()
+            }
         }
     }
 
     private fun castHexagram() {
+        isAnimating = true
+        btnCastHexagram.isEnabled = false
+        
+        // 隐藏之前的结果
+        cardResult.visibility = View.GONE
+        
+        // 显示摇卦动画
+        showShakingAnimation()
+    }
+
+    private fun showShakingAnimation() {
+        // 显示摇卦提示
+        tvShaking.visibility = View.VISIBLE
+        tvShaking.text = "摇卦中..."
+        
+        // 创建一个组合动画，让标题区域摇晃
+        val shakeAnimator = AnimatorSet()
+        
+        val rotate1 = ObjectAnimator.ofFloat(layoutTitle, "rotation", 0f, -5f, 5f, -5f, 5f, -5f, 5f, 0f)
+        val translateX1 = ObjectAnimator.ofFloat(layoutTitle, "translationX", 0f, 10f, -10f, 10f, -10f, 10f, 0f)
+        
+        shakeAnimator.playTogether(rotate1, translateX1)
+        shakeAnimator.duration = 2000 // 2秒
+        shakeAnimator.interpolator = AccelerateDecelerateInterpolator()
+        
+        // 动画监听
+        shakeAnimator.addListener(object : android.animation.Animator.AnimatorListener {
+            override fun onAnimationStart(animation: android.animation.Animator) {}
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                // 动画结束后显示结果
+                displayResult()
+            }
+            override fun onAnimationCancel(animation: android.animation.Animator) {}
+            override fun onAnimationRepeat(animation: android.animation.Animator) {}
+        })
+        
+        shakeAnimator.start()
+        
+        // 文字闪烁效果
+        val blinkAnimator = AlphaAnimation(1f, 0.3f).apply {
+            duration = 200
+            repeatMode = android.view.animation.Animation.REVERSE
+            repeatCount = 9
+        }
+        tvShaking.startAnimation(blinkAnimator)
+    }
+
+    private fun displayResult() {
+        // 隐藏摇卦提示
+        tvShaking.visibility = View.GONE
+        tvShaking.clearAnimation()
+        
         // 随机生成卦象
         val hexagram = HexagramGenerator.randomHexagram()
 
@@ -60,12 +127,16 @@ class MainActivity : AppCompatActivity() {
 
         // 显示结果
         displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc)
+        
+        isAnimating = false
+        btnCastHexagram.isEnabled = true
     }
 
     private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String) {
         // 更新卦象信息
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
+        tvSelectedLineName.text = "·$selectedLineName"
 
         // 显示上下卦
         tvUpperTrigram.text = "${hexagram.upperTrigram.symbol} ${hexagram.upperTrigram.name}（${hexagram.upperTrigram.nature}）"
