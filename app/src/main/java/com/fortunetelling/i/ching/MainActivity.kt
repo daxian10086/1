@@ -2,6 +2,7 @@ package com.fortunetelling.i.ching
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,6 +36,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var layoutShaking: FrameLayout
     private lateinit var layoutTitle: LinearLayout
 
+    // 选项页
+    private lateinit var tabLines: TextView
+    private lateinit var tabFortune: TextView
+    private lateinit var pageLines: LinearLayout
+    private lateinit var pageFortune: LinearLayout
+
     // 运势卡片
     private lateinit var tvLoveContent: TextView
     private lateinit var tvCareerContent: TextView
@@ -45,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStockContent: TextView
 
     private var isAnimating = false
+    private var currentTab = 0 // 0=六爻详解, 1=运势解读
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +79,12 @@ class MainActivity : AppCompatActivity() {
         layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
 
+        // 选项页
+        tabLines = findViewById(R.id.tabLines)
+        tabFortune = findViewById(R.id.tabFortune)
+        pageLines = findViewById(R.id.pageLines)
+        pageFortune = findViewById(R.id.pageFortune)
+
         // 运势内容
         tvLoveContent = findViewById(R.id.tvLoveContent)
         tvCareerContent = findViewById(R.id.tvCareerContent)
@@ -88,6 +102,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // 选项页切换
+        tabLines.setOnClickListener { switchTab(0) }
+        tabFortune.setOnClickListener { switchTab(1) }
+
         // 设置运势卡片点击折叠/展开
         setupFoldableCard(R.id.cardLove, R.id.tvLoveTitle, R.id.tvLoveContent)
         setupFoldableCard(R.id.cardCareer, R.id.tvCareerTitle, R.id.tvCareerContent)
@@ -96,6 +114,27 @@ class MainActivity : AppCompatActivity() {
         setupFoldableCard(R.id.cardFamily, R.id.tvFamilyTitle, R.id.tvFamilyContent)
         setupFoldableCard(R.id.cardRelation, R.id.tvRelationTitle, R.id.tvRelationContent)
         setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
+    }
+
+    private fun switchTab(tab: Int) {
+        currentTab = tab
+        if (tab == 0) {
+            // 六爻详解
+            tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
+            tabLines.setTextColor(Color.parseColor("#8B4513"))
+            tabFortune.setBackgroundColor(Color.parseColor("#F5F5DC"))
+            tabFortune.setTextColor(Color.parseColor("#666666"))
+            pageLines.visibility = View.VISIBLE
+            pageFortune.visibility = View.GONE
+        } else {
+            // 运势解读
+            tabLines.setBackgroundColor(Color.parseColor("#F5F5DC"))
+            tabLines.setTextColor(Color.parseColor("#666666"))
+            tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
+            tabFortune.setTextColor(Color.parseColor("#8B4513"))
+            pageLines.visibility = View.GONE
+            pageFortune.visibility = View.VISIBLE
+        }
     }
 
     private fun setupFoldableCard(cardId: Int, titleId: Int, contentId: Int) {
@@ -240,6 +279,9 @@ class MainActivity : AppCompatActivity() {
 
         // 显示多维度运势解读
         displayFortuneAnalysis(hexagram, selectedLineName)
+
+        // 重置到第一页
+        switchTab(0)
 
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {

@@ -19,7 +19,6 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <!-- 标题 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -29,7 +28,6 @@
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
-            <!-- 提示文字 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -47,7 +45,6 @@
             android:layout_height="100dp"
             android:layout_marginTop="24dp">
 
-            <!-- 摇桶图片 -->
             <ImageView
                 android:id="@+id/ivShaking"
                 android:layout_width="60dp"
@@ -57,7 +54,6 @@
                 android:src="@drawable/ic_shaking"
                 android:visibility="gone" />
 
-            <!-- 掉出的签 -->
             <ImageView
                 android:id="@+id/ivStickOut"
                 android:layout_width="60dp"
@@ -66,7 +62,6 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_stick_out"
                 android:visibility="gone" />
-
         </FrameLayout>
 
         <TextView
@@ -94,7 +89,7 @@
             android:textSize="20sp"
             app:cornerRadius="8dp" />
 
-        <!-- 卦象显示区域 -->
+        <!-- 结果区域 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardResult"
             android:layout_width="match_parent"
@@ -209,37 +204,64 @@
                     android:textColor="#333"
                     android:textSize="16sp" />
 
-                <!-- 六爻显示 -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="六爻详解"
-                    android:textColor="#666"
-                    android:textSize="14sp" />
-
-                <LinearLayout
-                    android:id="@+id/layoutLines"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="vertical" />
-
-                <!-- 多维度运势解读 -->
+                <!-- 选项页标签 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tabLines"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="12dp"
+                        android:text="六爻详解"
+                        android:textColor="#8B4513"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:background="#FFECB3" />
+
+                    <TextView
+                        android:id="@+id/tabFortune"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="12dp"
+                        android:text="运势解读"
+                        android:textColor="#666"
+                        android:textSize="15sp"
+                        android:background="#F5F5DC" />
+
+                </LinearLayout>
+
+                <!-- 六爻详解页面 -->
+                <LinearLayout
+                    android:id="@+id/pageLines"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutLines"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📊 多维度运势解读"
-                        android:textColor="#8B4513"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="vertical" />
+
+                </LinearLayout>
+
+                <!-- 运势解读页面 -->
+                <LinearLayout
+                    android:id="@+id/pageFortune"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone">
 
                     <!-- 爱情运势 -->
                     <LinearLayout
@@ -257,7 +279,7 @@
                             android:layout_height="wrap_content"
                             android:text="💕 爱情运势 ▼"
                             android:textColor="#E91E63"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -267,7 +289,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -287,7 +308,7 @@
                             android:layout_height="wrap_content"
                             android:text="💼 事业运势 ▼"
                             android:textColor="#2196F3"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -297,7 +318,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -317,7 +337,7 @@
                             android:layout_height="wrap_content"
                             android:text="💰 财运运势 ▼"
                             android:textColor="#FF9800"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -327,7 +347,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -347,7 +366,7 @@
                             android:layout_height="wrap_content"
                             android:text="🏃 健康运势 ▼"
                             android:textColor="#4CAF50"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -357,7 +376,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -377,7 +395,7 @@
                             android:layout_height="wrap_content"
                             android:text="🏠 家庭运势 ▼"
                             android:textColor="#9C27B0"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -387,7 +405,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -407,7 +424,7 @@
                             android:layout_height="wrap_content"
                             android:text="🤝 人际关系 ▼"
                             android:textColor="#00BCD4"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -417,7 +434,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
@@ -437,7 +453,7 @@
                             android:layout_height="wrap_content"
                             android:text="📊 投资理财 ▼"
                             android:textColor="#795548"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -447,7 +463,6 @@
                             android:layout_marginTop="8dp"
                             android:textSize="13sp"
                             android:textColor="#333"
-                            android:lineSpacingExtra="2dp"
                             android:visibility="visible" />
                     </LinearLayout>
 
