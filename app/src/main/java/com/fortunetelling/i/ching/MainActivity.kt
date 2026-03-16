@@ -300,8 +300,8 @@ class MainActivity : AppCompatActivity() {
         // 显示多维度运势解读
         displayFortuneAnalysis(hexagram, selectedLineName)
 
-        // 重置到第一页
-        switchTab(0)
+        // 重置到选中爻页面
+        switchTab(1)
 
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {

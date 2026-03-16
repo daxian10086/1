@@ -243,7 +243,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:text="运势解读"
+                        android:text="运势详解"
                         android:textColor="#666"
                         android:textSize="14sp"
                         android:background="#F5F5DC" />
