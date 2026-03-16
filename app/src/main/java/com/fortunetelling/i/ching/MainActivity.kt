@@ -1,7 +1,5 @@
 package com.fortunetelling.i.ching
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -46,99 +44,59 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun castHexagram() {
-        // 随机生成卦象
         val hexagram = HexagramGenerator.randomHexagram()
-
-        // 显示结果
         displayHexagram(hexagram)
     }
 
     private fun displayHexagram(hexagram: Hexagram) {
-        // 更新卦象信息
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
 
-        // 显示上下卦
         tvUpperTrigram.text = "${hexagram.upperTrigram.symbol} ${hexagram.upperTrigram.name}（${hexagram.upperTrigram.nature}）"
         tvLowerTrigram.text = "${hexagram.lowerTrigram.symbol} ${hexagram.lowerTrigram.name}（${hexagram.lowerTrigram.nature}）"
 
-        // 显示整体卦象含义
         tvOverallMeaning.text = hexagram.overallMeaning
 
-        // 显示六爻
         displayLines(hexagram)
-
-        // 显示结果卡片
         showResultCard()
     }
 
     private fun displayLines(hexagram: Hexagram) {
         layoutLines.removeAllViews()
 
-        // 从下到上显示六爻
         val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
 
         for (i in 0 until 6) {
-            val lineView = createLineView(lineNames[i], hexagram.lines[i], hexagram.lineDescriptions[i])
-            layoutLines.addView(lineView)
+            val lineName = lineNames[i]
+            val lineText = hexagram.lines[i]
+            val description = hexagram.lineDescriptions[i]
+
+            val lineInfo = TextView(this)
+            lineInfo.text = "$lineName：$lineText"
+            lineInfo.textSize = 16f
+            lineInfo.setTextColor(android.graphics.Color.BLACK)
+
+            val descView = TextView(this)
+            descView.text = description
+            descView.textSize = 14f
+            descView.setTextColor(android.graphics.Color.DKGRAY)
+            descView.setPadding(0, 6, 0, 0)
+
+            val container = LinearLayout(this)
+            container.orientation = LinearLayout.VERTICAL
+            container.setPadding(0, 12, 0, 12)
+            container.addView(lineInfo)
+            container.addView(descView)
+
+            layoutLines.addView(container)
         }
-    }
-
-    private fun createLineView(lineName: String, lineText: String, description: String): View {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 12, 0, 12)
-            // 添加分隔线
-            background = resources.getDrawable(android.R.drawable.divider_horizontal_bright)
-        }
-
-        // 爻名和爻词
-        val lineInfo = TextView(this).apply {
-            text = "$lineName：$lineText"
-            textSize = 16f
-            setTextColor(resources.getColor(android.R.color.black))
-        }
-
-        // 爻词解说
-        val descView = TextView(this).apply {
-            text = description
-            textSize = 14f
-            setTextColor(resources.getColor(android.R.color.darker_gray))
-            setPadding(0, 6, 0, 0)
-            lineSpacingExtra = 2f
-        }
-
-        container.addView(lineInfo)
-        container.addView(descView)
-
-        return container
     }
 
     private fun showResultCard() {
         if (cardResult.visibility == View.GONE) {
-            cardResult.apply {
-                alpha = 0f
-                visibility = View.VISIBLE
-                animate()
-                    .alpha(1f)
-                    .setDuration(300)
-                    .setListener(null)
-                    .start()
-            }
-        }
-    }
-
-    private fun hideResultCard() {
-        cardResult.apply {
-            animate()
-                .alpha(0f)
-                .setDuration(300)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        visibility = View.GONE
-                    }
-                })
-                .start()
+            cardResult.visibility = View.VISIBLE
+            cardResult.alpha = 0f
+            cardResult.animate().alpha(1f).setDuration(300).start()
         }
     }
 }
