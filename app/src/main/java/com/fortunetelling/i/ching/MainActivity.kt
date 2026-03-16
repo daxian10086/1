@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         cardResult.visibility = View.GONE
         
         // 恢复摇卦动画区域高度
-        layoutShaking.layoutParams.height = 120
+        layoutShaking.layoutParams.height = 100
         layoutShaking.requestLayout()
         
         // 显示摇卦动画

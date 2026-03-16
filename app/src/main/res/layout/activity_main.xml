@@ -44,14 +44,14 @@
         <FrameLayout
             android:id="@+id/layoutShaking"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginTop="32dp">
+            android:layout_height="100dp"
+            android:layout_marginTop="24dp">
 
             <!-- 摇桶图片 -->
             <ImageView
                 android:id="@+id/ivShaking"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_shaking"
@@ -60,8 +60,8 @@
             <!-- 掉出的签 -->
             <ImageView
                 android:id="@+id/ivStickOut"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_stick_out"
@@ -231,11 +231,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:background="#F0F8FF"
-                    android:lineSpacingExtra="3dp"
+                    android:background="@drawable/bg_fortune_card"
+                    android:lineSpacingExtra="4dp"
                     android:padding="16dp"
                     android:textColor="#333"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
+                    android:fontFamily="monospace"
                     android:visibility="gone" />
 
                 <!-- 选中的爻 -->
@@ -243,12 +244,12 @@
                     android:id="@+id/tvSelectedLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:background="#FFEB3B"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_line_card"
                     android:lineSpacingExtra="4dp"
                     android:padding="16dp"
-                    android:textColor="#8B4513"
-                    android:textSize="16sp"
+                    android:textColor="#5D4037"
+                    android:textSize="15sp"
                     android:visibility="gone" />
 
             </LinearLayout>
