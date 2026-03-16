@@ -3,11 +3,10 @@ package com.fortunetelling.i.ching
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AlphaAnimation
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var layoutLines: LinearLayout
     private lateinit var tvSelectedLine: TextView
     private lateinit var tvShaking: TextView
+    private lateinit var ivShaking: ImageView
     private lateinit var layoutTitle: LinearLayout
 
     private var isAnimating = false
@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         layoutLines = findViewById(R.id.layoutLines)
         tvSelectedLine = findViewById(R.id.tvSelectedLine)
         tvShaking = findViewById(R.id.tvShaking)
+        ivShaking = findViewById(R.id.ivShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
     }
 
@@ -76,13 +77,14 @@ class MainActivity : AppCompatActivity() {
     private fun showShakingAnimation() {
         // 显示摇卦提示
         tvShaking.visibility = View.VISIBLE
+        ivShaking.visibility = View.VISIBLE
         tvShaking.text = "摇卦中..."
         
-        // 创建一个组合动画，让标题区域摇晃
+        // 创建一个组合动画，让图标摇晃
         val shakeAnimator = AnimatorSet()
         
-        val rotate1 = ObjectAnimator.ofFloat(layoutTitle, "rotation", 0f, -5f, 5f, -5f, 5f, -5f, 5f, 0f)
-        val translateX1 = ObjectAnimator.ofFloat(layoutTitle, "translationX", 0f, 10f, -10f, 10f, -10f, 10f, 0f)
+        val rotate1 = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -15f, 15f, -15f, 15f, -15f, 15f, 0f)
+        val translateX1 = ObjectAnimator.ofFloat(ivShaking, "translationX", 0f, 20f, -20f, 20f, -20f, 20f, 0f)
         
         shakeAnimator.playTogether(rotate1, translateX1)
         shakeAnimator.duration = 2000 // 2秒
@@ -113,6 +115,7 @@ class MainActivity : AppCompatActivity() {
     private fun displayResult() {
         // 隐藏摇卦提示
         tvShaking.visibility = View.GONE
+        ivShaking.visibility = View.GONE
         tvShaking.clearAnimation()
         
         // 随机生成卦象

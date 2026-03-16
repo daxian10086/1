@@ -24,19 +24,37 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="周易算卦"
+                android:text="大仙算卦"
                 android:textColor="#8B4513"
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
+            <!-- 提示文字 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="默念所想之事，心诚则灵"
+                android:textColor="#666"
+                android:textSize="16sp" />
+
         </LinearLayout>
 
         <!-- 摇卦提示 -->
+        <ImageView
+            android:id="@+id/ivShaking"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:src="@drawable/ic_shaking"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/tvShaking"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="摇卦中..."
             android:textColor="#8B4513"

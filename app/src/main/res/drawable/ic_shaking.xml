@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 签筒背景 -->
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M44,20 L64,20 L60,85 L48,85 Z" />
+    <!-- 签条 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M50,25 L58,25 L57,75 L51,75 Z" />
+    <!-- 签头 -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:pathData="M50,20 L58,20 L58,28 L50,28 Z" />
+</vector>
