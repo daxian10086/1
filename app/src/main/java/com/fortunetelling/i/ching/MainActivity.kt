@@ -2,10 +2,12 @@ package com.fortunetelling.i.ching
 
 import android.os.Bundle
 import android.view.View
+import android.view.animation.AlphaAnimation
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLowerTrigram: TextView
     private lateinit var tvOverallMeaning: TextView
     private lateinit var layoutLines: LinearLayout
+    private lateinit var tvSelectedLine: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         tvLowerTrigram = findViewById(R.id.tvLowerTrigram)
         tvOverallMeaning = findViewById(R.id.tvOverallMeaning)
         layoutLines = findViewById(R.id.layoutLines)
+        tvSelectedLine = findViewById(R.id.tvSelectedLine)
     }
 
     private fun setupClickListener() {
@@ -44,20 +48,46 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun castHexagram() {
+        // 随机生成卦象
         val hexagram = HexagramGenerator.randomHexagram()
-        displayHexagram(hexagram)
+
+        // 随机选择六爻中的一爻
+        val lineIndex = Random.nextInt(6)
+        val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
+        val selectedLineName = lineNames[lineIndex]
+        val selectedLineText = hexagram.lines[lineIndex]
+        val selectedLineDesc = hexagram.lineDescriptions[lineIndex]
+
+        // 显示结果
+        displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc)
     }
 
-    private fun displayHexagram(hexagram: Hexagram) {
+    private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String) {
+        // 更新卦象信息
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
 
+        // 显示上下卦
         tvUpperTrigram.text = "${hexagram.upperTrigram.symbol} ${hexagram.upperTrigram.name}（${hexagram.upperTrigram.nature}）"
         tvLowerTrigram.text = "${hexagram.lowerTrigram.symbol} ${hexagram.lowerTrigram.name}（${hexagram.lowerTrigram.nature}）"
 
+        // 显示整体卦象含义
         tvOverallMeaning.text = hexagram.overallMeaning
 
+        // 显示六爻
         displayLines(hexagram)
+
+        // 显示选中的爻
+        tvSelectedLine.text = "【解卦】$selectedLineName：$selectedLineText\n\n$selectedLineDesc"
+        tvSelectedLine.visibility = View.VISIBLE
+
+        // 添加动画效果
+        val fadeIn = AlphaAnimation(0f, 1f).apply {
+            duration = 500
+            tvSelectedLine.startAnimation(this)
+        }
+
+        // 显示结果卡片
         showResultCard()
     }
 
