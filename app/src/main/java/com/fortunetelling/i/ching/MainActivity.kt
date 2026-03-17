@@ -325,12 +325,17 @@ class MainActivity : AppCompatActivity() {
             else -> 0
         }
         
-        // 设置各维度运势内容
+        // 获取HexagramFortunes数据（运势、财运、家庭、健康）
+        val fortuneData = HexagramFortunes.getLineFortune(hexagram.number, lineIndex)
+        
+        // 设置各维度运势内容（使用HexagramFortunes数据）
+        tvCareerContent.text = fortuneData?.运势 ?: "暂无数据"
+        tvWealthContent.text = fortuneData?.财运 ?: "暂无数据"
+        tvHealthContent.text = fortuneData?.健康 ?: "暂无数据"
+        tvFamilyContent.text = fortuneData?.家庭 ?: "暂无数据"
+        
+        // 其他卡片保持原样
         tvLoveContent.text = hexagram.getLoveFortune(lineIndex)
-        tvCareerContent.text = hexagram.getCareerFortune(lineIndex)
-        tvWealthContent.text = hexagram.getWealthFortune(lineIndex)
-        tvHealthContent.text = hexagram.getHealthFortune(lineIndex)
-        tvFamilyContent.text = hexagram.getFamilyFortune(lineIndex)
         tvRelationContent.text = hexagram.getRelationFortune(lineIndex)
         tvStockContent.text = hexagram.getStockFortune(lineIndex)
         
@@ -344,13 +349,13 @@ class MainActivity : AppCompatActivity() {
         tvStockContent.visibility = View.GONE
         
         // 更新标题显示状态
+        findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势详情"  // 事业运势 → 运势详情
         findViewById<TextView>(R.id.tvLoveTitle).text = "💕 爱情运势 ▶"
-        findViewById<TextView>(R.id.tvCareerTitle).text = "💼 事业运势 ▶"
         findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运运势 ▶"
         findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康运势 ▶"
         findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭运势 ▶"
         findViewById<TextView>(R.id.tvRelationTitle).text = "🤝 人际关系 ▶"
-        findViewById<TextView>(R.id.tvStockTitle).text = "📊 投资理财 ▶"
+        findViewById<TextView>(R.id.tvStockTitle).text = "📈 投资理财 ▶"
     }
 
     private fun displayLines(hexagram: Hexagram) {
