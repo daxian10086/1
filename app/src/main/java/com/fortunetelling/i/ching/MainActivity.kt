@@ -348,6 +348,11 @@ class MainActivity : AppCompatActivity() {
 
         // 显示结果卡片
         showResultCard()
+        
+        // 滑动到页面最下方，显示运势详情
+        scrollView.post {
+            scrollView.fullScroll(View.FOCUS_DOWN)
+        }
     }
 
     private fun displayFortuneAnalysis(hexagram: Hexagram, lineName: String) {
@@ -382,17 +387,23 @@ class MainActivity : AppCompatActivity() {
         tvWealthContent.visibility = View.GONE
         tvHealthContent.visibility = View.GONE
         tvFamilyContent.visibility = View.GONE
+        // 运势、财运、家庭、健康 全部展开显示
+        tvCareerContent.visibility = View.VISIBLE
+        tvLoveContent.visibility = View.GONE
+        tvWealthContent.visibility = View.VISIBLE
+        tvHealthContent.visibility = View.VISIBLE
+        tvFamilyContent.visibility = View.VISIBLE
         tvRelationContent.visibility = View.GONE
         tvStockContent.visibility = View.GONE
         
-        // 更新标题显示状态
-        findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势详情"  // 事业运势 → 运势详情
-        findViewById<TextView>(R.id.tvLoveTitle).text = "💕 爱情运势 ▶"
-        findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运运势 ▶"
-        findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康运势 ▶"
-        findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭运势 ▶"
-        findViewById<TextView>(R.id.tvRelationTitle).text = "🤝 人际关系 ▶"
-        findViewById<TextView>(R.id.tvStockTitle).text = "📈 投资理财 ▶"
+        // 更新标题（去掉箭头，默认展开）
+        findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势"
+        findViewById<TextView>(R.id.tvLoveTitle).text = "💕 爱情"
+        findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运"
+        findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康"
+        findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭"
+        findViewById<TextView>(R.id.tvRelationTitle).text = "🤝 人际关系"
+        findViewById<TextView>(R.id.tvStockTitle).text = "📈 投资理财"
     }
 
     private fun displayLines(hexagram: Hexagram) {
