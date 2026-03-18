@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStockContent: TextView
 
     private var isAnimating = false
-    private var currentTab = 2 // 0=六爻详解, 1=选中爻, 2=运势解读
+    private var currentTab = 0 // 0=运势详解, 1=选中爻, 2=其他爻
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,9 +110,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 选项页切换
-        tabLines.setOnClickListener { switchTab(0) }
+        tabFortune.setOnClickListener { switchTab(0) }
         tabSelected.setOnClickListener { switchTab(1) }
-        tabFortune.setOnClickListener { switchTab(2) }
+        tabLines.setOnClickListener { switchTab(2) }
 
         // 设置运势卡片点击折叠/展开
         setupFoldableCard(R.id.cardLove, R.id.tvLoveTitle, R.id.tvLoveContent)
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
         
         // 默认显示运势详解
-        switchTab(2)
+        switchTab(0)
     }
 
     private fun switchTab(tab: Int) {
@@ -144,10 +144,10 @@ class MainActivity : AppCompatActivity() {
         
         when(tab) {
             0 -> {
-                // 六爻详解
-                tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
-                tabLines.setTextColor(Color.parseColor("#8B4513"))
-                pageLines.visibility = View.VISIBLE
+                // 运势详解
+                tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabFortune.setTextColor(Color.parseColor("#8B4513"))
+                pageFortune.visibility = View.VISIBLE
             }
             1 -> {
                 // 选中爻
@@ -156,10 +156,10 @@ class MainActivity : AppCompatActivity() {
                 pageSelected.visibility = View.VISIBLE
             }
             2 -> {
-                // 运势解读
-                tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
-                tabFortune.setTextColor(Color.parseColor("#8B4513"))
-                pageFortune.visibility = View.VISIBLE
+                // 其他爻
+                tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabLines.setTextColor(Color.parseColor("#8B4513"))
+                pageLines.visibility = View.VISIBLE
             }
         }
     }
@@ -344,7 +344,7 @@ class MainActivity : AppCompatActivity() {
         displayFortuneAnalysis(hexagram, selectedLineName)
 
         // 重置到运势详解页面
-        switchTab(2)
+        switchTab(0)
 
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {
