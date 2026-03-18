@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStockContent: TextView
 
     private var isAnimating = false
-    private var currentTab = 0 // 0=六爻详解, 1=选中爻, 2=运势解读
+    private var currentTab = 2 // 0=六爻详解, 1=选中爻, 2=运势解读
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -390,6 +390,11 @@ class MainActivity : AppCompatActivity() {
         tvWealthContent.visibility = View.GONE
         tvHealthContent.visibility = View.GONE
         tvFamilyContent.visibility = View.GONE
+        // 隐藏爱情、人际关系、理财投资板块
+        findViewById<View>(R.id.cardLove)?.visibility = View.GONE
+        findViewById<View>(R.id.cardRelation)?.visibility = View.GONE
+        findViewById<View>(R.id.cardStock)?.visibility = View.GONE
+        
         // 运势、财运、家庭、健康 全部展开显示
         tvCareerContent.visibility = View.VISIBLE
         tvLoveContent.visibility = View.GONE
