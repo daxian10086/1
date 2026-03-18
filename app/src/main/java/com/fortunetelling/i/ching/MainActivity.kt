@@ -270,15 +270,52 @@ class MainActivity : AppCompatActivity() {
         val selectedLineName = lineNames[lineIndex]
         val selectedLineText = hexagram.lines[lineIndex]
         val selectedLineDesc = hexagram.lineDescriptions[lineIndex]
+        
+        // 智能评分 - 根据爻辞质量分析返回1-5星
+        val stars = analyzeLineQuality(selectedLineText, selectedLineDesc)
 
         // 显示结果
-        displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc)
+        displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc, stars)
         
         isAnimating = false
         btnCastHexagram.isEnabled = true
     }
 
-    private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String) {
+    // 分析爻辞质量（返回1-5星）
+    private fun analyzeLineQuality(lineText: String, lineDesc: String): String {
+        val fullText = (lineText + " " + lineDesc).lowercase()
+        
+        // 吉祥关键词
+        val goodWords = listOf("吉", "利", "亨", "通", "大吉", "元吉", "贞吉", "安", "喜", "福", "庆", "誉", "无咎", "无不利", "有终")
+        // 凶险关键词
+        val badWords = listOf("凶", "厉", "悔", "吝", "灾", "害", "死", "败", "损", "亡", "穷", "病", "忧", "咎", "寇", "血", "战")
+        
+        var goodScore = 0
+        var badScore = 0
+        
+        goodWords.forEach { word ->
+            if (fullText.contains(word)) goodScore++
+        }
+        
+        badWords.forEach { word ->
+            if (fullText.contains(word)) badScore++
+        }
+        
+        val total = goodScore + badScore
+        if (total == 0) return "⭐⭐⭐☆☆"
+        
+        val ratio = goodScore.toFloat() / total
+        
+        return when {
+            ratio >= 0.8f && goodScore >= 3 -> "⭐⭐⭐⭐⭐"
+            ratio >= 0.6f && goodScore >= 2 -> "⭐⭐⭐⭐☆"
+            ratio >= 0.4f && goodScore >= 1 -> "⭐⭐⭐☆☆"
+            ratio >= 0.2f -> "⭐⭐☆☆☆"
+            else -> "⭐☆☆☆☆"
+        }
+    }
+
+    private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String, stars: String) {
         // 更新卦象信息
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
