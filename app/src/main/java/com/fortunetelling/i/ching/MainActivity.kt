@@ -122,6 +122,9 @@ class MainActivity : AppCompatActivity() {
         setupFoldableCard(R.id.cardFamily, R.id.tvFamilyTitle, R.id.tvFamilyContent)
         setupFoldableCard(R.id.cardRelation, R.id.tvRelationTitle, R.id.tvRelationContent)
         setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
+        
+        // 默认显示运势详解
+        switchTab(2)
     }
 
     private fun switchTab(tab: Int) {
@@ -340,8 +343,8 @@ class MainActivity : AppCompatActivity() {
         // 显示多维度运势解读
         displayFortuneAnalysis(hexagram, selectedLineName)
 
-        // 重置到选中爻页面
-        switchTab(1)
+        // 重置到运势详解页面
+        switchTab(2)
 
         // 添加动画效果
         val fadeIn = AlphaAnimation(0f, 1f).apply {
