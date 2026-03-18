@@ -12,6 +12,7 @@ import android.view.animation.AlphaAnimation
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pageLines: LinearLayout
     private lateinit var pageSelected: LinearLayout
     private lateinit var pageFortune: LinearLayout
+    private lateinit var scrollView: ScrollView
 
     // 运势卡片
     private lateinit var tvLoveContent: TextView
@@ -88,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         pageLines = findViewById(R.id.pageLines)
         pageSelected = findViewById(R.id.pageSelected)
         pageFortune = findViewById(R.id.pageFortune)
+        scrollView = findViewById(R.id.scrollView)
 
         // 运势内容
         tvLoveContent = findViewById(R.id.tvLoveContent)
