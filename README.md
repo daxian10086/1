@@ -4,12 +4,41 @@
 
 ## 功能特点
 
-- 随机生成64卦之一
+- **摇一摇算卦** - 支持手机摇动触发算卦，更真实更有趣
+- **震动反馈** - 摇动和结果显示时有震动反馈
+- **分享解锁** - 内容隐藏，分享后才能查看完整运势
+- **随机生成64卦之一**
 - 显示上卦、下卦
 - 显示整体卦象含义
 - 详细展示六爻（从下到上）
 - 每爻包含爻词和爻词解说
+- 运势详解（运势、财运、家庭、健康）
 - 中国风UI设计
+
+## 核心功能说明
+
+### 摇一摇算卦
+1. 点击"算一卦"按钮
+2. 显示"📱 摇动手机开始算卦"提示
+3. 用力摇晃手机（上下左右都可以）
+4. 检测到摇动后显示"正在摇卦..."
+5. 停止摇动后，显示"算卦中..."（2秒）
+6. 显示算卦结果
+
+### 震动反馈
+- 摇动手机时持续震动（每80ms一次）
+- 停止摇动后震动停止
+- 显示结果时震动一次提示
+- 解锁内容后震动确认
+
+### 分享解锁功能
+- **运势详解**：需要分享后才能查看
+- **选中爻**：需要分享后才能查看
+- **其他爻**：需要分享后才能查看
+- 点击右上角菜单 → "分享"
+- 分享成功后，所有内容自动解锁
+- 可以通过菜单中的"重置分享状态"重新锁定
+- 点击"分享解锁"按钮后，1秒后自动解锁
 
 ## 项目结构
 
@@ -18,14 +47,24 @@ fortune-teller/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/com/fortunetelling/i/ching/
-│   │   │   ├── MainActivity.kt              # 主界面
+│   │   │   ├── MainActivity.kt              # 主界面（新增摇一摇、震动、分享功能）
 │   │   │   ├── Hexagram.kt                  # 卦象数据类
 │   │   │   ├── Trigrams.kt                  # 八卦数据
-│   │   │   ├── HexagramGenerator.kt         # 随机生成器
-│   │   │   └── HexagramsData.kt             # 64卦完整数据
+│   │   │   ├── HexagramGenerator.kt         # 随机生成器（新增 currentHexagram 属性）
+│   │   │   ├── HexagramsData.kt             # 64卦完整数据
+│   │   │   └── HexagramFortunes.kt            # 运势详解数据
 │   │   ├── res/
 │   │   │   ├── layout/
-│   │   │   │   └── activity_main.xml        # 主界面布局
+│   │   │   │   ├── activity_main.xml        # 主界面布局
+│   │   │   │   ├── layout_shake_hint_large.xml  # 摇动提示布局
+│   │   │   │   ├── view_share_blur.xml        # 内容模糊提示布局
+│   │   │   │   ├── dialog_share.xml          # 分享引导弹窗布局
+│   │   │   │   └── dialog_loading.xml        # 加载对话框布局
+│   │   │   ├── menu/
+│   │   │   │   └── main.xml                 # 选项菜单（分享、重置）
+│   │   │   ├── drawable/
+│   │   │   │   ├── bg_shake_hint_large.xml  # 摇动提示背景
+│   │   │   │   └── bg_share_blur.xml        # 内容模糊背景
 │   │   │   └── values/
 │   │   │       ├── strings.xml
 │   │   │       ├── colors.xml
@@ -34,7 +73,8 @@ fortune-teller/
 │   └── build.gradle
 ├── build.gradle
 ├── settings.gradle
-└── gradle.properties
+├── gradle.properties
+└── VERSION.md                           # 版本信息
 ```
 
 ## 构建APK
@@ -82,7 +122,10 @@ APK位置：
 1. 安装APK到Android设备
 2. 打开应用
 3. 点击"算一卦"按钮
-4. 查看卦象结果
+4. 摇动手机算卦
+5. 查看卦象结果
+6. 点击右上角菜单分享给好友
+7. 分享后查看完整运势详解
 
 ## 卦象数据
 
@@ -94,6 +137,14 @@ APK位置：
 - 爻词解说
 - 整体卦象含义
 
+## 运势详解
+
+包含四个维度的运势分析：
+- **运势**：整体运势和运势走向
+- **财运**：财运和投资建议
+- **家庭**：家庭和人际关系
+- **健康**：健康和生活建议
+
 ## 技术栈
 
 - Kotlin
@@ -101,6 +152,13 @@ APK位置：
 - Material Components
 - ConstraintLayout
 - CardView
+- 传感器管理器（加速度传感器）
+- 震动管理器（Vibrator）
+
+## 权限说明
+
+应用需要以下权限：
+- `android.permission.VIBRATE` - 震动反馈
 
 ## 许可证
 

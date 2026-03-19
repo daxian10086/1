@@ -1,26 +1,38 @@
+// 核心逻辑：摇一摇算卦 + 震动反馈 + 分享解锁
+
 package com.fortunetelling.i.ching
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Vibrator
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AlphaAnimation
+import android.view.MenuItem
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.google.android.material.button.MaterialButton
 import kotlin.random.Random
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SensorEventListener {
 
+    // 原有控件
     private lateinit var btnCastHexagram: MaterialButton
     private lateinit var cardResult: CardView
     private lateinit var tvHexagramNumber: TextView
@@ -55,8 +67,32 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvRelationContent: TextView
     private lateinit var tvStockContent: TextView
 
+    // 新增：摇一摇相关
+    private lateinit var shakeHintLarge: LinearLayout
+    private lateinit var shakeHintText: TextView
+    private var sensorManager: SensorManager? = null
+    private var accelerometer: Sensor? = null
+
+    // 新增：震动
+    private var vibrator: Vibrator? = null
+    private var isVibrating = false
+    private var vibrationRunnable: Runnable? = null
+    private var vibrationHandler: Handler? = null
+
+    // 新增：状态管理
     private var isAnimating = false
+    private var isShaking = false
+    private var hasShared = false
     private var currentTab = 0 // 0=运势详解, 1=选中爻, 2=其他爻
+
+    // 摇一摇检测变量
+    private var lastX = 0f
+    private var lastY = 0f
+    private var lastZ = 0f
+    private var lastShakeTime = 0L
+    private val SHAKE_THRESHOLD = 0.8f // 摇动阈值
+    private val SHAKE_INTERVAL = 800L // 摇动间隔（毫秒）
+    private val VIBRATION_INTERVAL = 80L // 震动间隔（毫秒）
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +100,8 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         setupClickListeners()
+        initSensors()
+        loadShareState()
     }
 
     private fun initViews() {
@@ -100,12 +138,24 @@ class MainActivity : AppCompatActivity() {
         tvFamilyContent = findViewById(R.id.tvFamilyContent)
         tvRelationContent = findViewById(R.id.tvRelationContent)
         tvStockContent = findViewById(R.id.tvStockContent)
+
+        // Toolbar
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        // 尝试查找摇动提示区域（如果布局中存在）
+        try {
+            shakeHintLarge = findViewById(R.id.shakeHintLarge)
+            shakeHintText = findViewById(R.id.shakeHintText)
+        } catch (e: Exception) {
+            // 如果布局中没有这些控件，在代码中动态创建
+        }
     }
 
     private fun setupClickListeners() {
         btnCastHexagram.setOnClickListener {
-            if (!isAnimating) {
-                castHexagram()
+            if (!isAnimating && !isShaking) {
+                startShakeProcess()
             }
         }
 
@@ -121,66 +171,199 @@ class MainActivity : AppCompatActivity() {
         setupFoldableCard(R.id.cardHealth, R.id.tvHealthTitle, R.id.tvHealthContent)
         setupFoldableCard(R.id.cardFamily, R.id.tvFamilyTitle, R.id.tvFamilyContent)
         setupFoldableCard(R.id.cardRelation, R.id.tvRelationTitle, R.id.tvRelationContent)
-        setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
+        setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockTitle, R.id.tvStockContent)
         
         // 默认显示运势详解
         switchTab(0)
     }
 
-    private fun switchTab(tab: Int) {
-        currentTab = tab
-        // 重置所有tab样式
-        tabLines.setBackgroundColor(Color.parseColor("#F5F5DC"))
-        tabLines.setTextColor(Color.parseColor("#666666"))
-        tabSelected.setBackgroundColor(Color.parseColor("#F5F5DC"))
-        tabSelected.setTextColor(Color.parseColor("#666666"))
-        tabFortune.setBackgroundColor(Color.parseColor("#F5F5DC"))
-        tabFortune.setTextColor(Color.parseColor("#666666"))
+    private fun initSensors() {
+        // 初始化传感器
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        // 初始化震动
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        vibrationHandler = Handler(Looper.getMainLooper())
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 停止传感器
+        sensorManager?.unregisterListener(this)
+        // 停止震动
+        stopVibration()
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        val now = System.currentTimeMillis()
         
-        // 隐藏所有页面
-        pageLines.visibility = View.GONE
-        pageSelected.visibility = View.GONE
-        pageFortune.visibility = View.GONE
-        
-        when(tab) {
-            0 -> {
-                // 运势详解
-                tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
-                tabFortune.setTextColor(Color.parseColor("#8B4513"))
-                pageFortune.visibility = View.VISIBLE
-            }
-            1 -> {
-                // 选中爻
-                tabSelected.setBackgroundColor(Color.parseColor("#FFECB3"))
-                tabSelected.setTextColor(Color.parseColor("#8B4513"))
-                pageSelected.visibility = View.VISIBLE
-            }
-            2 -> {
-                // 其他爻
-                tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
-                tabLines.setTextColor(Color.parseColor("#8B4513"))
-                pageLines.visibility = View.VISIBLE
+        // 避免过于频繁的检测
+        if (now - lastShakeTime < SHAKE_INTERVAL) {
+            return
+        }
+
+        if (event != null) {
+            val x = event.values[0]
+            val y = event.values[1]
+            val z = event.values[2]
+
+            // 计算加速度变化量（欧几里得距离）
+            val deltaX = kotlin.math.abs(x - lastX)
+            val deltaY = kotlin.math.abs(y - lastY)
+            val deltaZ = kotlin.math.abs(z - lastZ)
+            val acceleration = kotlin.math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
+
+            // 更新上次的值
+            lastX = x
+            lastY = y
+            lastZ = z
+
+            // 检测是否摇动
+            if (acceleration > SHAKE_THRESHOLD) {
+                onShakeDetected(now)
             }
         }
     }
 
-    private fun setupFoldableCard(cardId: Int, titleId: Int, contentId: Int) {
-        val card = findViewById<LinearLayout>(cardId)
-        val title = findViewById<TextView>(titleId)
-        val content = findViewById<TextView>(contentId)
-        
-        card.setOnClickListener {
-            if (content.visibility == View.VISIBLE) {
-                content.visibility = View.GONE
-                title.text = title.text.toString().replace("▼", "▶")
-            } else {
-                content.visibility = View.VISIBLE
-                title.text = title.text.toString().replace("▶", "▼")
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // 不需要处理
+    }
+
+    // 检测到摇动
+    private fun onShakeDetected(now: Long) {
+        lastShakeTime = now
+
+        if (!isShaking) {
+            isShaking = true
+
+            // 开始持续震动
+            startVibration()
+
+            // 更新UI：显示正在摇卦
+            showShakingState(true)
+
+            // 设置停止检测定时器
+            Handler(Looper.getMainLooper()).postDelayed({
+                onShakeStopped()
+            }, SHAKE_INTERVAL)
+        } else {
+            // 重置停止检测定时器
+            Handler(Looper.getMainLooper()).removeCallbacks(stopShakeRunnable)
+            Handler(Looper.getMainLooper()).postDelayed({
+                onShakeStopped()
+            }, SHAKE_INTERVAL)
+        }
+    }
+
+    private val stopShakeRunnable = Runnable {
+        onShakeStopped()
+    }
+
+    // 摇动停止
+    private fun onShakeStopped() {
+        isShaking = false
+
+        // 停止震动
+        stopVibration()
+
+        // 更新UI：显示算卦中
+        showShakingState(false)
+
+        // 停止传感器监听
+        sensorManager?.unregisterListener(this)
+
+        // 2秒后显示结果
+        Handler(Looper.getMainLooper()).postDelayed({
+            performCastHexagram()
+        }, 2000)
+    }
+
+    // 开始持续震动
+    private fun startVibration() {
+        if (isVibrating) return
+        isVibrating = true
+
+        // 立即震动一次
+        vibrator?.vibrate(100)
+
+        // 定时震动
+        vibrationRunnable = object : Runnable {
+            override fun run() {
+                if (isVibrating) {
+                    vibrator?.vibrate(50)
+                    vibrationHandler?.postDelayed(this, VIBRATION_INTERVAL)
+                }
+            }
+        }
+        vibrationHandler?.post(vibrationRunnable!!, VIBRATION_INTERVAL)
+    }
+
+    // 停止震动
+    private fun stopVibration() {
+        isVibrating = false
+        vibrationRunnable?.let {
+            vibrationHandler?.removeCallbacks(it)
+        }
+    }
+
+    // 开始摇一摇流程
+    private fun startShakeProcess() {
+        // 显示摇动提示
+        showShakeHint(true)
+
+        // 开始监听加速度
+        sensorManager?.registerListener(
+            accelerometer,
+            SensorManager.SENSOR_DELAY_GAME,
+            this
+        )
+
+        // 重置变量
+        lastX = 0f
+        lastY = 0f
+        lastZ = 0f
+        lastShakeTime = 0
+        isShaking = false
+
+        // 8秒后如果还没摇动，自动开始
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (isShaking && !isAnimating && btnCastHexagram.isEnabled) {
+                // 如果还在摇动，等它自然停止
+            } else if (!isAnimating && btnCastHexagram.isEnabled && !isShaking) {
+                // 8秒未摇动，自动开始
+                stopAccelerometer()
+                showShakingAnimation()
+            }
+        }, 8000)
+    }
+
+    // 显示/隐藏摇动提示
+    private fun showShakeHint(show: Boolean) {
+        if (::shakeHintText.isInitialized) {
+            shakeHintLarge.visibility = if (show) View.VISIBLE else View.GONE
+            if (show) {
+                shakeHintText.text = "📱 摇动手机开始算卦"
             }
         }
     }
 
-    private fun castHexagram() {
+    // 更新摇动状态UI
+    private fun showShakingState(shaking: Boolean) {
+        if (shaking) {
+            tvShaking.text = "正在摇卦..."
+        } else {
+            tvShaking.text = "算卦中..."
+        }
+    }
+
+    // 停止加速度监听
+    private fun stopAccelerometer() {
+        sensorManager?.unregisterListener(this)
+    }
+
+    // 显示摇卦动画
+    private fun showShakingAnimation() {
         isAnimating = true
         btnCastHexagram.isEnabled = false
         
@@ -191,16 +374,13 @@ class MainActivity : AppCompatActivity() {
         layoutShaking.layoutParams.height = 100
         layoutShaking.requestLayout()
         
-        // 显示摇卦动画
-        showShakingAnimation()
-    }
-
-    private fun showShakingAnimation() {
-        // 显示摇桶
-        ivShaking.visibility = View.VISIBLE
-        ivStickOut.visibility = View.GONE
+        // 显示摇卦提示
+        showShakeHint(false)
+        
+        // 显示摇卦动画区域
         tvShaking.visibility = View.VISIBLE
-        tvShaking.text = "摇卦中..."
+        ivShaking.visibility = View.VISIBLE
+        tvShaking.text = "算卦中..."
         
         // 摇晃动画
         val shakeAnimator = AnimatorSet()
@@ -215,7 +395,9 @@ class MainActivity : AppCompatActivity() {
         shakeAnimator.addListener(object : android.animation.Animator.AnimatorListener {
             override fun onAnimationStart(animation: android.animation.Animator) {}
             override fun onAnimationEnd(animation: android.animation.Animator) {
-                showStickFalling()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    performCastHexagram()
+                }, 2000)
             }
             override fun onAnimationCancel(animation: android.animation.Animator) {}
             override fun onAnimationRepeat(animation: android.animation.Animator) {}
@@ -227,101 +409,55 @@ class MainActivity : AppCompatActivity() {
         val blinkAnimator = AlphaAnimation(1f, 0.3f).apply {
             duration = 150
             repeatMode = android.view.animation.Animation.REVERSE
-            repeatCount = 9
+            repeatCount = 12
         }
         tvShaking.startAnimation(blinkAnimator)
     }
 
-    private fun showStickFalling() {
-        // 隐藏摇桶，显示签掉出
-        ivShaking.visibility = View.GONE
-        ivStickOut.visibility = View.VISIBLE
-        
-        // 签掉出动画
-        val dropAnimator = ObjectAnimator.ofFloat(ivStickOut, "translationY", -50f, 0f)
-        dropAnimator.duration = 500
-        dropAnimator.interpolator = AccelerateDecelerateInterpolator()
-        
-        dropAnimator.addListener(object : android.animation.Animator.AnimatorListener {
-            override fun onAnimationStart(animation: android.animation.Animator) {}
-            override fun onAnimationEnd(animation: android.animation.Animator) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    displayResult()
-                }, 500)
-            }
-            override fun onAnimationCancel(animation: android.animation.Animator) {}
-            override fun onAnimationRepeat(animation: android.animation.Animator) {}
-        })
-        
-        dropAnimator.start()
-    }
+    // 执行算卦逻辑
+    private fun performCastHexagram() {
+        try {
+            // 隐藏摇卦提示
+            tvShaking.visibility = View.GONE
+            ivShaking.visibility = View.GONE
+            tvShaking.clearAnimation()
+            
+            // 缩回摇卦动画区域
+            layoutShaking.layoutParams.height = 0
+            layoutShaking.requestLayout()
+            
+            // 随机生成卦象
+            val hexagram = HexagramGenerator.randomHexagram()
 
-    private fun displayResult() {
-        // 隐藏摇卦提示
-        tvShaking.visibility = View.GONE
-        ivShaking.visibility = View.GONE
-        ivStickOut.visibility = View.GONE
-        tvShaking.clearAnimation()
-        
-        // 缩回摇卦动画区域
-        layoutShaking.layoutParams.height = 0
-        layoutShaking.requestLayout()
-        
-        // 随机生成卦象
-        val hexagram = HexagramGenerator.randomHexagram()
+            // 随机选择六爻中的一爻
+            val lineIndex = Random.nextInt(6)
+            val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
+            val selectedLineName = lineNames[lineIndex]
+            val selectedLineText = hexagram.lines[lineIndex]
+            val selectedLineDesc = hexagram.lineDescriptions[lineIndex]
+            
+            // 重置 hasShared 状态
+            hasShared = getSharedState()
 
-        // 随机选择六爻中的一爻
-        val lineIndex = Random.nextInt(6)
-        val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
-        val selectedLineName = lineNames[lineIndex]
-        val selectedLineText = hexagram.lines[lineIndex]
-        val selectedLineDesc = hexagram.lineDescriptions[lineIndex]
-        
-        // 智能评分 - 根据爻辞质量分析返回1-5星
-        val stars = analyzeLineQuality(selectedLineText, selectedLineDesc)
+            // 显示结果
+            displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc)
 
-        // 显示结果
-        displayHexagram(hexagram, selectedLineName, selectedLineText, selectedLineDesc, stars)
-        
-        isAnimating = false
-        btnCastHexagram.isEnabled = true
-    }
-
-    // 分析爻辞质量（返回1-5星）
-    private fun analyzeLineQuality(lineText: String, lineDesc: String): String {
-        val fullText = (lineText + " " + lineDesc).lowercase()
-        
-        // 吉祥关键词
-        val goodWords = listOf("吉", "利", "亨", "通", "大吉", "元吉", "贞吉", "安", "喜", "福", "庆", "誉", "无咎", "无不利", "有终")
-        // 凶险关键词
-        val badWords = listOf("凶", "厉", "悔", "吝", "灾", "害", "死", "败", "损", "亡", "穷", "病", "忧", "咎", "寇", "血", "战")
-        
-        var goodScore = 0
-        var badScore = 0
-        
-        goodWords.forEach { word ->
-            if (fullText.contains(word)) goodScore++
-        }
-        
-        badWords.forEach { word ->
-            if (fullText.contains(word)) badScore++
-        }
-        
-        val total = goodScore + badScore
-        if (total == 0) return "⭐⭐⭐☆☆"
-        
-        val ratio = goodScore.toFloat() / total
-        
-        return when {
-            ratio >= 0.8f && goodScore >= 3 -> "⭐⭐⭐⭐⭐"
-            ratio >= 0.6f && goodScore >= 2 -> "⭐⭐⭐⭐☆"
-            ratio >= 0.4f && goodScore >= 1 -> "⭐⭐⭐☆☆"
-            ratio >= 0.2f -> "⭐⭐☆☆☆"
-            else -> "⭐☆☆☆☆"
+            isAnimating = false
+            btnCastHexagram.isEnabled = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            isAnimating = false
+            btnCastHexagram.isEnabled = true
+            AlertDialog.Builder(this)
+                .setTitle("错误")
+                .setMessage("算卦出错：${e.message}")
+                .setPositiveButton("确定", null)
+                .show()
         }
     }
 
-    private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String, stars: String) {
+    // 显示结果
+    private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String) {
         // 更新卦象信息
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
@@ -346,21 +482,18 @@ class MainActivity : AppCompatActivity() {
         // 重置到运势详解页面
         switchTab(0)
 
-        // 添加动画效果
-        val fadeIn = AlphaAnimation(0f, 1f).apply {
-            duration = 500
-            layoutLines.getChildAt(0)?.startAnimation(this)
+        // 震动一次提示用户已解锁
+        if (hasShared) {
+            vibrator?.vibrate(100)
         }
 
-        // 显示结果卡片
-        showResultCard()
-        
-        // 滑动到页面最下方，显示运势详情
+        // 滚动到页面最下方，显示运势详情
         scrollView.post {
             scrollView.fullScroll(View.FOCUS_DOWN)
         }
     }
 
+    // 显示运势分析（根据 hasShared 控制显示）
     private fun displayFortuneAnalysis(hexagram: Hexagram, lineName: String) {
         // 根据爻名获取索引
         val lineIndex = when(lineName) {
@@ -373,78 +506,294 @@ class MainActivity : AppCompatActivity() {
             else -> 0
         }
         
-        // 获取HexagramFortunes数据（运势、财运、家庭、健康）
+        // 获取运势数据
         val fortuneData = HexagramFortunes.getLineFortune(hexagram.number, lineIndex)
         
-        // 设置各维度运势内容（使用HexagramFortunes数据）
-        tvCareerContent.text = fortuneData?.运势 ?: "暂无数据"
-        tvWealthContent.text = fortuneData?.财运 ?: "暂无数据"
-        tvHealthContent.text = fortuneData?.健康 ?: "暂无数据"
-        tvFamilyContent.text = fortuneData?.家庭 ?: "暂无数据"
-        
-        // 其他卡片保持原样
-        tvLoveContent.text = hexagram.getLoveFortune(lineIndex)
-        tvRelationContent.text = hexagram.getRelationFortune(lineIndex)
-        tvStockContent.text = hexagram.getStockFortune(lineIndex)
-        
-        // 默认折叠所有卡片
-        tvLoveContent.visibility = View.GONE
-        tvCareerContent.visibility = View.GONE
-        tvWealthContent.visibility = View.GONE
-        tvHealthContent.visibility = View.GONE
-        tvFamilyContent.visibility = View.GONE
+        // 如果已分享，显示完整内容；否则显示模糊提示
+        if (hasShared) {
+            tvCareerContent.text = fortuneData?.运势 ?: "暂无数据"
+            tvWealthContent.text = fortuneData?.财运 ?: "暂无数据"
+            tvHealthContent.text = fortuneData?.健康 ?: "暂无数据"
+            tvFamilyContent.text = fortuneData?.家庭 ?: "暂无数据"
+            tvLoveContent.visibility = View.GONE
+            tvRelationContent.visibility = View.GONE
+            tvStockContent.visibility = View.GONE
+        } else {
+            // 隐藏所有运势内容
+            tvCareerContent.visibility = View.GONE
+            tvWealthContent.visibility = View.GONE
+            tvHealthContent.visibility = View.GONE
+            tvFamilyContent.visibility = View.GONE
+        }
+
         // 隐藏爱情、人际关系、理财投资板块
         findViewById<View>(R.id.cardLove)?.visibility = View.GONE
         findViewById<View>(R.id.cardRelation)?.visibility = View.GONE
         findViewById<View>(R.id.cardStock)?.visibility = View.GONE
         
-        // 运势、财运、家庭、健康 全部展开显示
-        tvCareerContent.visibility = View.VISIBLE
-        tvLoveContent.visibility = View.GONE
-        tvWealthContent.visibility = View.VISIBLE
-        tvHealthContent.visibility = View.VISIBLE
-        tvFamilyContent.visibility = View.VISIBLE
-        tvRelationContent.visibility = View.GONE
-        tvStockContent.visibility = View.GONE
-        
-        // 更新标题（去掉箭头，默认展开）
-        findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势"
-        findViewById<TextView>(R.id.tvLoveTitle).text = "💕 爱情"
-        findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运"
-        findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康"
-        findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭"
-        findViewById<TextView>(R.id.tvRelationTitle).text = "🤝 人际关系"
-        findViewById<TextView>(R.id.tvStockTitle).text = "📈 投资理财"
+        // 运势、财运、家庭、健康 全部展开显示（如果已分享）
+        if (hasShared) {
+            tvCareerContent.visibility = View.VISIBLE
+            tvWealthContent.visibility = View.VISIBLE
+            tvHealthContent.visibility = View.VISIBLE
+            tvFamilyContent.visibility = View.VISIBLE
+            
+            findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势"
+            findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运"
+            findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康"
+            findViewById<TextView>(R.id.tvFamilyTitle). text = "🏠 家庭"
+        } else {
+            // 显示模糊提示
+            pageFortune.removeAllViews()
+            val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageFortune, false)
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看运势详解"
+            val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.setOnClickListener {
+                showShareDialog()
+            }
+            pageFortune.addView(blurView)
+        }
     }
 
+    // 显示六爻（根据 hasShared 控制显示）
     private fun displayLines(hexagram: Hexagram) {
         layoutLines.removeAllViews()
 
         val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
 
-        for (i in 0 until 6) {
-            val lineName = lineNames[i]
-            val lineText = hexagram.lines[i]
-            val description = hexagram.lineDescriptions[i]
+        if (hasShared) {
+            // 已分享，显示完整内容
+            for (i in 0 until 6) {
+                val lineName = lineNames[i]
+                val lineText = hexagram.lines[i]
+                val description = hexagram.lineDescriptions[i]
 
-            val lineInfo = TextView(this)
-            lineInfo.text = "$lineName：$lineText"
-            lineInfo.textSize = 16f
-            lineInfo.setTextColor(android.graphics.Color.BLACK)
+                val lineInfo = TextView(this)
+                lineInfo.text = "$lineName：$lineText"
+                lineInfo.textSize = 16f
+                lineInfo.setTextColor(Color.BLACK)
 
-            val descView = TextView(this)
-            descView.text = description
-            descView.textSize = 14f
-            descView.setTextColor(android.graphics.Color.DKGRAY)
-            descView.setPadding(0, 6, 0, 0)
+                val descView = TextView(this)
+                descView.text = description
+                descView.textSize = 14f
+                descView.setTextColor(Color.DKGRAY)
+                descView.setPadding(0, 6, 0, 0)
 
-            val container = LinearLayout(this)
-            container.orientation = LinearLayout.VERTICAL
-            container.setPadding(0, 12, 0, 12)
-            container.addView(lineInfo)
-            container.addView(descView)
+                val container = LinearLayout(this)
+                container.orientation = LinearLayout.VERTICAL
+                container.setPadding(0, 12, 0, 12)
+                container.addView(lineInfo)
+                container.addView(descView)
 
-            layoutLines.addView(container)
+                layoutLines.addView(container)
+            }
+        } else {
+            // 未分享，显示模糊提示
+            val blurView = layoutInflater.inflate(R.layout.view_share_blur, layoutLines, false)
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
+            val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.setOnClickListener {
+                showShareDialog()
+            }
+            layoutLines.addView(blurView)
+        }
+    }
+
+    // 显示选中爻（根据 hasShared 控制显示）
+    private fun displaySelectedLine() {
+        // 这个方法在 switchTab 中会被调用
+        // pageSelected 中已经设置了 tvSelectedLine 的内容
+        // 只需要控制可见性
+        if (!hasShared) {
+            // 显示模糊提示
+            pageSelected.removeAllViews()
+            val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageSelected, false)
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看运势详解"
+            val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.setOnClickListener {
+                showShareDialog()
+            }
+            pageSelected.addView(blurView)
+        }
+    }
+
+    // 显示分享引导弹窗
+    private fun showShareDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_share, null)
+        
+        AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("分享解锁") { _, _ ->
+                handleShareUnlock()
+            }
+            .setNegativeButton("取消", null)
+            .create()
+    }
+
+    // 分享解锁（模拟）
+    private fun handleShareUnlock() {
+        // 模拟1秒延迟
+        AlertDialog.Builder(this)
+            .setTitle("正在解锁...")
+            .setCancelable(false)
+            .setView(R.layout.dialog_loading)
+            .create()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            // 解锁内容
+            hasShared = true
+            saveShareState()
+            
+            // 刷新UI
+            refreshUI()
+            
+            AlertDialog.Builder(this)
+                .setTitle("已解锁")
+                .setMessage("内容已解锁，您可以查看完整的运势详解和六爻详解")
+                .setPositiveButton("确定", null)
+                .create()
+        }, 1000)
+    }
+
+    // 保存分享状态
+    private fun saveShareState() {
+        val prefs = getSharedPreferences("pref", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("hasShared", hasShared).apply()
+    }
+
+    // 读取分享状态
+    private fun getSharedState(): Boolean {
+        val prefs = getSharedPreferences("pref", Context.MODE_PRIVATE)
+        return prefs.getBoolean("hasShared", false)
+    }
+
+    // 刷新UI（当分享状态改变时）
+    private fun refreshUI() {
+        // 重新显示当前标签页的内容
+        when (currentTab) {
+            0 -> {
+                // 运势详解
+                pageFortune.removeAllViews()
+                displayFortuneAnalysis(HexagramGenerator.currentHexagram, tvSelectedLine.text.toString())
+            }
+            1 -> {
+                // 选中爻
+                pageSelected.removeAllViews()
+                if (hasShared) {
+                    // 显示内容
+                    val selectedLineText = tvSelectedLine.text.toString()
+                    pageSelected.removeAllViews()
+                    val textView = TextView(this)
+                    textView.text = selectedLineText
+                    textView.textSize = 16f
+                    textView.setPadding(24, 16, 24, 16)
+                    pageSelected.addView(textView)
+                } else {
+                    // 显示模糊提示
+                    displaySelectedLine()
+                }
+            }
+            2 -> {
+                // 其他爻
+                pageLines.removeAllViews()
+                if (hasShared) {
+                    // 显示内容
+                    val hexagram = HexagramGenerator.currentHexagram
+                    if (hexagram != null) {
+                        displayLines(hexagram)
+                    }
+                } else {
+                    // 显示模糊提示
+                    pageLines.removeAllViews()
+                    val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageLines, false)
+                    blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "�.drawable-lock 已隐藏"
+                    blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
+                    val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+                    shareBtn?.setOnClickListener {
+                        showShareDialog()
+                    }
+                    pageLines.addView(blurView)
+                }
+            }
+        }
+    }
+
+    // 选项页切换
+    private fun switchTab(tab: Int) {
+        currentTab = tab
+        // 重置所有tab样式
+        tabLines.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabLines.setTextColor(Color.parseColor("#666666"))
+        tabSelected.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabSelected.setTextColor(Color.parseColor("#666666"))
+        tabFortune.setBackgroundColor(Color.parseColor("#F5F5DC"))
+        tabFortune.setTextColor(Color.parseColor("#666666"))
+        
+        // 隐藏所有页面
+        pageLines.visibility = View.GONE
+        pageSelected.visibility = View.GONE
+        pageFortune.visibility = View.GONE
+        
+        when(tab) {
+            0 -> {
+                // 运势详解
+                tabFortune.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabFortune.setTextColor(Color.parseColor("#8B4513"))
+                pageFortune.visibility = View.VISIBLE
+                // 重新加载运势分析
+                if (::tvHexagramName.isInitialized) {
+                    val hexagram = HexagramGenerator.currentHexagram
+                    if (hexagram != null) {
+                        displayFortuneAnalysis(hexagram, tvSelectedLine.text.toString())
+                    }
+                }
+            }
+            1 -> {
+                // 选中爻
+                tabSelected.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabSelected.setTextColor(Color.parseColor("#8B4513"))
+                pageSelected.visibility = View.VISIBLE
+                // 根据分享状态显示
+                if (!hasShared) {
+                    displaySelectedLine()
+                }
+            }
+            2 -> {
+                // 其他爻
+                tabLines.setBackgroundColor(Color.parseColor("#FFECB3"))
+                tabLines.setTextColor(Color.parseColor("#8B4513"))
+                pageLines.visibility = View.VISIBLE
+                // 根据分享状态显示
+                if (!hasShared) {
+                    val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageLines, false)
+                    blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
+                    blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
+                    val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+                    shareBtn?.setOnClickListener {
+                        showShareDialog()
+                    }
+                    pageLines.addView(blurView)
+                }
+            }
+        }
+    }
+
+    private fun setupFoldableCard(cardId: Int, titleId: Int, contentId: Int) {
+        val card = findViewById<LinearLayout>(cardId)
+        val title = findViewById<TextView>(titleId)
+        val content = findViewById<TextView>(contentId)
+        
+        card.setOnClickListener {
+            if (content.visibility == View.VISIBLE) {
+                content.visibility = View.GONE
+                title.text = title.text.toString().replace("▼", "▶")
+            } else {
+                content.visibility = View.VISIBLE
+                title.text = title.text.toString().replace("▶", "▼")
+            }
         }
     }
 
@@ -454,5 +803,50 @@ class MainActivity : AppCompatActivity() {
             cardResult.alpha = 0f
             cardResult.animate().alpha(1f).setDuration(300).start()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_share -> {
+                shareApp()
+                return true
+            }
+            R.id.action_reset -> {
+                resetShareState()
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
+    // 分享应用
+    private fun shareApp() {
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "我刚用大仙周易抽中了卦象，来看看你的运势如何！")
+        }
+        startActivity(Intent.createChooser(shareIntent, "分享大仙周易"))
+    }
+
+    // 重置分享状态
+    private fun resetShareState() {
+        hasShared = false
+        saveShareState()
+        refreshUI()
+        AlertDialog.Builder(this)
+            .setTitle("已重置")
+            .setMessage("下次算卦时需要重新分享才能查看完整内容")
+            .setPositiveButton("确定", null)
+            .create()
+    }
+
+    private fun loadShareState() {
+        hasShared = getSharedState()
     }
 }
