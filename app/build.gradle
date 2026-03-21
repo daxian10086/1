@@ -11,8 +11,8 @@ android {
         applicationId "com.fortunetelling.i.ching"
         minSdk 24
         targetSdk 34
-        versionCode 7
-        versionName "2.2.5"
+        versionCode 8
+        versionName "2.3.0"
     }
 
     buildTypes {
