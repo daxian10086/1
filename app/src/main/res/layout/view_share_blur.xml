@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="64dp 40dp"
+    android:paddingLeft="64dp"
+    android:paddingRight="64dp"
+    android:paddingTop="40dp"
+    android:paddingBottom="40dp"
     android:background="@drawable/bg_share_blur"
     android:layout_margin="16dp">
 

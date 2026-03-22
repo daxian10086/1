@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="64dp 48dp">
+    android:paddingLeft="64dp"
+    android:paddingRight="64dp"
+    android:paddingTop="48dp"
+    android:paddingBottom="48dp">
 
     <TextView
         android:layout_width="wrap_content"
