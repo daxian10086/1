@@ -99,12 +99,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        initViews()
-        setupClickListeners()
-        initSensors()
-        loadShareState()
+        
+        try {
+            setContentView(R.layout.activity_main)
+            initViews()
+            setupClickListeners()
+            initSensors()
+            loadShareState()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun initViews() {
