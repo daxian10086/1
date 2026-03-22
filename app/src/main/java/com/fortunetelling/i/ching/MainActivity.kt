@@ -48,6 +48,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var ivStickOut: ImageView
     private lateinit var layoutShaking: FrameLayout
     private lateinit var layoutTitle: LinearLayout
+    private lateinit var layoutHexagramInfo: LinearLayout
+    private lateinit var layoutTrigrams: LinearLayout
 
     // 选项页
     private lateinit var tabLines: TextView
@@ -84,14 +86,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var isShaking = false
     private var hasShared = false
     private var currentTab = 0 // 0=运势详解, 1=选中爻, 2=其他爻
+    private var currentHexagram: Hexagram? = null
+    private var currentLineIndex: Int = 0
+    private var adCountdownHandler: Handler? = null
 
     // 摇一摇检测变量
     private var lastX = 0f
     private var lastY = 0f
     private var lastZ = 0f
     private var lastShakeTime = 0L
-    private val SHAKE_THRESHOLD = 0.8f // 摇动阈值
-    private val SHAKE_INTERVAL = 800L // 摇动间隔（毫秒）
+    private var shakeStartTime = 0L
+    private val SHAKE_THRESHOLD = 12f // 摇动阈值（加速度变化量）
+    private val SHAKE_INTERVAL = 100L // 摇动检测间隔（毫秒）
+    private val SHAKE_STOP_TIMEOUT = 800L // 800ms无摇动视为停止
     private val VIBRATION_INTERVAL = 80L // 震动间隔（毫秒）
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,6 +127,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivStickOut = findViewById(R.id.ivStickOut)
         layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
+        layoutHexagramInfo = findViewById(R.id.layoutHexagramInfo)
+        layoutTrigrams = findViewById(R.id.layoutTrigrams)
 
         // 选项页
         tabLines = findViewById(R.id.tabLines)
@@ -140,7 +149,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvStockContent = findViewById(R.id.tvStockContent)
 
         // Toolbar
-        toolbar = findViewById(R.id.toolbar)
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         // 尝试查找摇动提示区域（如果布局中存在）
@@ -171,7 +180,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         setupFoldableCard(R.id.cardHealth, R.id.tvHealthTitle, R.id.tvHealthContent)
         setupFoldableCard(R.id.cardFamily, R.id.tvFamilyTitle, R.id.tvFamilyContent)
         setupFoldableCard(R.id.cardRelation, R.id.tvRelationTitle, R.id.tvRelationContent)
-        setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockTitle, R.id.tvStockContent)
+        setupFoldableCard(R.id.cardStock, R.id.tvStockTitle, R.id.tvStockContent)
         
         // 默认显示运势详解
         switchTab(0)
@@ -185,6 +194,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // 初始化震动
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         vibrationHandler = Handler(Looper.getMainLooper())
+        adCountdownHandler = Handler(Looper.getMainLooper())
     }
 
     override fun onDestroy() {
@@ -193,6 +203,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensorManager?.unregisterListener(this)
         // 停止震动
         stopVibration()
+        // 停止广告倒计时
+        adCountdownHandler?.removeCallbacksAndMessages(null)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -218,10 +230,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             lastX = x
             lastY = y
             lastZ = z
+            lastShakeTime = now
 
             // 检测是否摇动
             if (acceleration > SHAKE_THRESHOLD) {
                 onShakeDetected(now)
+            } else if (isShaking && now - shakeStartTime > SHAKE_STOP_TIMEOUT) {
+                // 800ms内无摇动视为停止
+                onShakeStopped()
             }
         }
     }
@@ -232,10 +248,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 检测到摇动
     private fun onShakeDetected(now: Long) {
-        lastShakeTime = now
-
         if (!isShaking) {
             isShaking = true
+            shakeStartTime = now
 
             // 开始持续震动
             startVibration()
@@ -243,29 +258,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             // 更新UI：显示正在摇卦
             showShakingState(true)
 
-            // 设置停止检测定时器
-            Handler(Looper.getMainLooper()).postDelayed({
-                onShakeStopped()
-            }, SHAKE_INTERVAL)
-        } else {
-            // 重置停止检测定时器
-            Handler(Looper.getMainLooper()).removeCallbacks(stopShakeRunnable)
-            Handler(Looper.getMainLooper()).postDelayed({
-                onShakeStopped()
-            }, SHAKE_INTERVAL)
+            // 开始摇签筒左右摇摆动画
+            startShakeTubeAnimation()
         }
-    }
-
-    private val stopShakeRunnable = Runnable {
-        onShakeStopped()
     }
 
     // 摇动停止
     private fun onShakeStopped() {
+        if (!isShaking) return
+        
         isShaking = false
 
         // 停止震动
         stopVibration()
+
+        // 停止摇签筒动画
+        ivShaking.clearAnimation()
 
         // 更新UI：显示算卦中
         showShakingState(false)
@@ -279,13 +287,30 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }, 2000)
     }
 
+    // 开始摇签筒左右摇摆动画
+    private fun startShakeTubeAnimation() {
+        val shakeLeft = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -15f)
+        shakeLeft.duration = 150
+        shakeLeft.repeatCount = ObjectAnimator.INFINITE
+        shakeLeft.repeatMode = ObjectAnimator.REVERSE
+        
+        val shakeRight = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, 15f)
+        shakeRight.duration = 150
+        shakeRight.repeatCount = ObjectAnimator.INFINITE
+        shakeRight.repeatMode = ObjectAnimator.REVERSE
+        
+        val animatorSet = AnimatorSet()
+        animatorSet.playSequentially(shakeLeft, shakeRight)
+        animatorSet.start()
+    }
+
     // 开始持续震动
     private fun startVibration() {
         if (isVibrating) return
         isVibrating = true
 
         // 立即震动一次
-        vibrator?.vibrate(100)
+        vibrator?.vibrate(50)
 
         // 定时震动
         vibrationRunnable = object : Runnable {
@@ -296,7 +321,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
             }
         }
-        vibrationHandler?.post(vibrationRunnable!!, VIBRATION_INTERVAL)
+        vibrationHandler?.postDelayed(vibrationRunnable!!, VIBRATION_INTERVAL)
     }
 
     // 停止震动
@@ -305,18 +330,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         vibrationRunnable?.let {
             vibrationHandler?.removeCallbacks(it)
         }
+        vibrator?.cancel()
     }
 
     // 开始摇一摇流程
     private fun startShakeProcess() {
+        // 隐藏之前的结果
+        cardResult.visibility = View.GONE
+        
         // 显示摇动提示
         showShakeHint(true)
 
         // 开始监听加速度
         sensorManager?.registerListener(
+            this,
             accelerometer,
-            SensorManager.SENSOR_DELAY_GAME,
-            this
+            SensorManager.SENSOR_DELAY_GAME
         )
 
         // 重置变量
@@ -324,13 +353,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         lastY = 0f
         lastZ = 0f
         lastShakeTime = 0
+        shakeStartTime = 0
         isShaking = false
 
         // 8秒后如果还没摇动，自动开始
         Handler(Looper.getMainLooper()).postDelayed({
-            if (isShaking && !isAnimating && btnCastHexagram.isEnabled) {
-                // 如果还在摇动，等它自然停止
-            } else if (!isAnimating && btnCastHexagram.isEnabled && !isShaking) {
+            if (!isShaking && !isAnimating && btnCastHexagram.isEnabled) {
                 // 8秒未摇动，自动开始
                 stopAccelerometer()
                 showShakingAnimation()
@@ -340,7 +368,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 显示/隐藏摇动提示
     private fun showShakeHint(show: Boolean) {
-        if (::shakeHintText.isInitialized) {
+        if (::shakeHintLarge.isInitialized) {
             shakeHintLarge.visibility = if (show) View.VISIBLE else View.GONE
             if (show) {
                 shakeHintText.text = "📱 摇动手机开始算卦"
@@ -371,7 +399,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         cardResult.visibility = View.GONE
         
         // 恢复摇卦动画区域高度
-        layoutShaking.layoutParams.height = 100
+        layoutShaking.layoutParams.height = FrameLayout.LayoutParams.WRAP_CONTENT
         layoutShaking.requestLayout()
         
         // 显示摇卦提示
@@ -382,34 +410,40 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivShaking.visibility = View.VISIBLE
         tvShaking.text = "算卦中..."
         
-        // 摇晃动画
-        val shakeAnimator = AnimatorSet()
+        // 摇晃动画 - 左右摇摆
+        val shakeLeft = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -15f)
+        shakeLeft.duration = 200
+        shakeLeft.repeatCount = 5
+        shakeLeft.repeatMode = ObjectAnimator.REVERSE
         
-        val rotate1 = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, -10f, 10f, -10f, 10f, -10f, 10f, 0f)
-        val translateX1 = ObjectAnimator.ofFloat(ivShaking, "translationX", 0f, 15f, -15f, 15f, -15f, 15f, 0f)
+        val shakeRight = ObjectAnimator.ofFloat(ivShaking, "rotation", 0f, 15f)
+        shakeRight.duration = 200
+        shakeRight.repeatCount = 5
+        shakeRight.repeatMode = ObjectAnimator.REVERSE
         
-        shakeAnimator.playTogether(rotate1, translateX1)
-        shakeAnimator.duration = 1500
-        shakeAnimator.interpolator = AccelerateDecelerateInterpolator()
+        val animatorSet = AnimatorSet()
+        animatorSet.playSequentially(shakeLeft, shakeRight)
+        animatorSet.duration = 2000
+        animatorSet.interpolator = AccelerateDecelerateInterpolator()
         
-        shakeAnimator.addListener(object : android.animation.Animator.AnimatorListener {
+        animatorSet.addListener(object : android.animation.Animator.AnimatorListener {
             override fun onAnimationStart(animation: android.animation.Animator) {}
             override fun onAnimationEnd(animation: android.animation.Animator) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     performCastHexagram()
-                }, 2000)
+                }, 500)
             }
             override fun onAnimationCancel(animation: android.animation.Animator) {}
             override fun onAnimationRepeat(animation: android.animation.Animator) {}
         })
         
-        shakeAnimator.start()
+        animatorSet.start()
         
         // 文字闪烁效果
         val blinkAnimator = AlphaAnimation(1f, 0.3f).apply {
-            duration = 150
+            duration = 200
             repeatMode = android.view.animation.Animation.REVERSE
-            repeatCount = 12
+            repeatCount = 10
         }
         tvShaking.startAnimation(blinkAnimator)
     }
@@ -428,9 +462,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             
             // 随机生成卦象
             val hexagram = HexagramGenerator.randomHexagram()
+            currentHexagram = hexagram
 
             // 随机选择六爻中的一爻
             val lineIndex = Random.nextInt(6)
+            currentLineIndex = lineIndex
             val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
             val selectedLineName = lineNames[lineIndex]
             val selectedLineText = hexagram.lines[lineIndex]
@@ -458,16 +494,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 显示结果
     private fun displayHexagram(hexagram: Hexagram, selectedLineName: String, selectedLineText: String, selectedLineDesc: String) {
-        // 更新卦象信息
+        // 更新卦象信息 - UI布局优化（v2.3.4）
+        // 左边：第X卦（灰色小字）+ 卦名（黑色大字）+ 爻位（红色）
         tvHexagramNumber.text = "第${hexagram.number}卦"
         tvHexagramName.text = hexagram.name
         tvSelectedLineName.text = "·$selectedLineName"
 
-        // 显示上下卦
-        tvUpperTrigram.text = "${hexagram.upperTrigram.symbol} ${hexagram.upperTrigram.name}（${hexagram.upperTrigram.nature}）"
-        tvLowerTrigram.text = "${hexagram.lowerTrigram.symbol} ${hexagram.lowerTrigram.name}（${hexagram.lowerTrigram.nature}）"
+        // 右边：上卦卡片 + 下卦卡片（居中对齐）
+        tvUpperTrigram.text = "${hexagram.upperTrigram.symbol}\n${hexagram.upperTrigram.name}（${hexagram.upperTrigram.nature}）"
+        tvLowerTrigram.text = "${hexagram.lowerTrigram.symbol}\n${hexagram.lowerTrigram.name}（${hexagram.lowerTrigram.nature}）"
 
-        // 显示整体卦象含义
+        // 底部：卦象含义（单独一行）
         tvOverallMeaning.text = hexagram.overallMeaning
 
         // 显示六爻
@@ -507,53 +544,79 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         
         // 获取运势数据
-        val fortuneData = HexagramFortunes.getLineFortune(hexagram.number, lineIndex)
+        val fortuneData = HexagramFortunes.getFortune(hexagram.number, lineIndex)
         
         // 如果已分享，显示完整内容；否则显示模糊提示
         if (hasShared) {
+            // 显示运势内容
             tvCareerContent.text = fortuneData?.运势 ?: "暂无数据"
             tvWealthContent.text = fortuneData?.财运 ?: "暂无数据"
             tvHealthContent.text = fortuneData?.健康 ?: "暂无数据"
             tvFamilyContent.text = fortuneData?.家庭 ?: "暂无数据"
-            tvLoveContent.visibility = View.GONE
-            tvRelationContent.visibility = View.GONE
-            tvStockContent.visibility = View.GONE
-        } else {
-            // 隐藏所有运势内容
-            tvCareerContent.visibility = View.GONE
-            tvWealthContent.visibility = View.GONE
-            tvHealthContent.visibility = View.GONE
-            tvFamilyContent.visibility = View.GONE
-        }
-
-        // 隐藏爱情、人际关系、理财投资板块
-        findViewById<View>(R.id.cardLove)?.visibility = View.GONE
-        findViewById<View>(R.id.cardRelation)?.visibility = View.GONE
-        findViewById<View>(R.id.cardStock)?.visibility = View.GONE
-        
-        // 运势、财运、家庭、健康 全部展开显示（如果已分享）
-        if (hasShared) {
+            
+            // 设置标题
+            findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势 ▼"
+            findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运 ▼"
+            findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康 ▼"
+            findViewById<TextView>(R.id.tvFamilyTitle).text = "🏠 家庭 ▼"
+            
+            // 显示所有卡片
+            findViewById<View>(R.id.cardLove)?.visibility = View.GONE
+            findViewById<View>(R.id.cardRelation)?.visibility = View.GONE
+            findViewById<View>(R.id.cardStock)?.visibility = View.GONE
+            findViewById<View>(R.id.cardCareer)?.visibility = View.VISIBLE
+            findViewById<View>(R.id.cardWealth)?.visibility = View.VISIBLE
+            findViewById<View>(R.id.cardHealth)?.visibility = View.VISIBLE
+            findViewById<View>(R.id.cardFamily)?.visibility = View.VISIBLE
+            
+            // 显示内容
             tvCareerContent.visibility = View.VISIBLE
             tvWealthContent.visibility = View.VISIBLE
             tvHealthContent.visibility = View.VISIBLE
             tvFamilyContent.visibility = View.VISIBLE
-            
-            findViewById<TextView>(R.id.tvCareerTitle).text = "📊 运势"
-            findViewById<TextView>(R.id.tvWealthTitle).text = "💰 财运"
-            findViewById<TextView>(R.id.tvHealthTitle).text = "🏃 健康"
-            findViewById<TextView>(R.id.tvFamilyTitle). text = "🏠 家庭"
         } else {
             // 显示模糊提示
             pageFortune.removeAllViews()
             val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageFortune, false)
-            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
-            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看运势详解"
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 运势详解已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看运势详解\n或等待10秒后自动解锁"
+            
             val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.text = "分享解锁"
             shareBtn?.setOnClickListener {
                 showShareDialog()
             }
+            
+            // 开始10秒广告倒计时
+            startAdCountdown(blurView)
+            
             pageFortune.addView(blurView)
         }
+    }
+
+    // 开始10秒广告倒计时
+    private fun startAdCountdown(blurView: View) {
+        val countdownText = blurView.findViewById<TextView>(R.id.tvCountdown)
+        var secondsRemaining = 10
+        
+        countdownText?.visibility = View.VISIBLE
+        countdownText?.text = "${secondsRemaining}秒后自动解锁"
+        
+        val countdownRunnable = object : Runnable {
+            override fun run() {
+                secondsRemaining--
+                if (secondsRemaining > 0) {
+                    countdownText?.text = "${secondsRemaining}秒后自动解锁"
+                    adCountdownHandler?.postDelayed(this, 1000)
+                } else {
+                    // 10秒到，自动解锁
+                    countdownText?.text = "正在解锁..."
+                    handleShareUnlock()
+                }
+            }
+        }
+        
+        adCountdownHandler?.postDelayed(countdownRunnable, 1000)
     }
 
     // 显示六爻（根据 hasShared 控制显示）
@@ -591,56 +654,67 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         } else {
             // 未分享，显示模糊提示
             val blurView = layoutInflater.inflate(R.layout.view_share_blur, layoutLines, false)
-            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
-            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 六爻详解已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解\n或等待10秒后自动解锁"
+            
             val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.text = "分享解锁"
             shareBtn?.setOnClickListener {
                 showShareDialog()
             }
+            
+            // 开始10秒广告倒计时
+            startAdCountdown(blurView)
+            
             layoutLines.addView(blurView)
         }
     }
 
     // 显示选中爻（根据 hasShared 控制显示）
     private fun displaySelectedLine() {
-        // 这个方法在 switchTab 中会被调用
-        // pageSelected 中已经设置了 tvSelectedLine 的内容
-        // 只需要控制可见性
         if (!hasShared) {
             // 显示模糊提示
             pageSelected.removeAllViews()
             val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageSelected, false)
-            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
-            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看运势详解"
+            blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 选中爻详解已隐藏"
+            blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看选中爻详解\n或等待10秒后自动解锁"
+            
             val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
+            shareBtn?.text = "分享解锁"
             shareBtn?.setOnClickListener {
                 showShareDialog()
             }
+            
+            // 开始10秒广告倒计时
+            startAdCountdown(blurView)
+            
             pageSelected.addView(blurView)
         }
     }
 
     // 显示分享引导弹窗
     private fun showShareDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_share, null)
-        
         AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setPositiveButton("分享解锁") { _, _ ->
-                handleShareUnlock()
+            .setTitle("分享解锁")
+            .setMessage("分享大仙周易给好友，即可立即解锁所有内容！")
+            .setPositiveButton("立即分享") { _, _ ->
+                shareApp()
             }
-            .setNegativeButton("取消", null)
-            .create()
+            .setNegativeButton("等待10秒") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(true)
+            .show()
     }
 
     // 分享解锁（模拟）
     private fun handleShareUnlock() {
-        // 模拟1秒延迟
+        // 2秒后自动解锁
         AlertDialog.Builder(this)
             .setTitle("正在解锁...")
             .setCancelable(false)
-            .setView(R.layout.dialog_loading)
             .create()
+            .show()
 
         Handler(Looper.getMainLooper()).postDelayed({
             // 解锁内容
@@ -651,11 +725,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             refreshUI()
             
             AlertDialog.Builder(this)
-                .setTitle("已解锁")
+                .setTitle("✅ 已解锁")
                 .setMessage("内容已解锁，您可以查看完整的运势详解和六爻详解")
                 .setPositiveButton("确定", null)
-                .create()
-        }, 1000)
+                .show()
+        }, 2000)
     }
 
     // 保存分享状态
@@ -672,22 +746,26 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 刷新UI（当分享状态改变时）
     private fun refreshUI() {
+        // 停止广告倒计时
+        adCountdownHandler?.removeCallbacksAndMessages(null)
+        
         // 重新显示当前标签页的内容
         when (currentTab) {
             0 -> {
                 // 运势详解
                 pageFortune.removeAllViews()
-                displayFortuneAnalysis(HexagramGenerator.currentHexagram, tvSelectedLine.text.toString())
+                currentHexagram?.let {
+                    val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
+                    displayFortuneAnalysis(it, lineNames[currentLineIndex])
+                }
             }
             1 -> {
                 // 选中爻
                 pageSelected.removeAllViews()
                 if (hasShared) {
                     // 显示内容
-                    val selectedLineText = tvSelectedLine.text.toString()
-                    pageSelected.removeAllViews()
                     val textView = TextView(this)
-                    textView.text = selectedLineText
+                    textView.text = tvSelectedLine.text.toString()
                     textView.textSize = 16f
                     textView.setPadding(24, 16, 24, 16)
                     pageSelected.addView(textView)
@@ -701,21 +779,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 pageLines.removeAllViews()
                 if (hasShared) {
                     // 显示内容
-                    val hexagram = HexagramGenerator.currentHexagram
-                    if (hexagram != null) {
-                        displayLines(hexagram)
+                    currentHexagram?.let {
+                        displayLines(it)
                     }
                 } else {
                     // 显示模糊提示
-                    pageLines.removeAllViews()
-                    val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageLines, false)
-                    blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "�.drawable-lock 已隐藏"
-                    blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
-                    val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
-                    shareBtn?.setOnClickListener {
-                        showShareDialog()
-                    }
-                    pageLines.addView(blurView)
+                    displayLines(currentHexagram!!)
                 }
             }
         }
@@ -744,11 +813,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tabFortune.setTextColor(Color.parseColor("#8B4513"))
                 pageFortune.visibility = View.VISIBLE
                 // 重新加载运势分析
-                if (::tvHexagramName.isInitialized) {
-                    val hexagram = HexagramGenerator.currentHexagram
-                    if (hexagram != null) {
-                        displayFortuneAnalysis(hexagram, tvSelectedLine.text.toString())
-                    }
+                currentHexagram?.let {
+                    val lineNames = arrayOf("初爻", "二爻", "三爻", "四爻", "五爻", "上爻")
+                    displayFortuneAnalysis(it, lineNames[currentLineIndex])
                 }
             }
             1 -> {
@@ -768,16 +835,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 pageLines.visibility = View.VISIBLE
                 // 根据分享状态显示
                 if (!hasShared) {
-                    val blurView = layoutInflater.inflate(R.layout.view_share_blur, pageLines, false)
-                    blurView.findViewById<TextView>(R.id.shareBlurText)?.text = "🔒 内容已隐藏"
-                    blurView.findViewById<TextView>(R.id.shareBlurHint)?.text = "分享给好友即可查看六爻详解"
-                    val shareBtn = blurView.findViewById<MaterialButton>(R.id.shareBtn)
-                    shareBtn?.setOnClickListener {
-                        showShareDialog()
+                    pageLines.removeAllViews()
+                    currentHexagram?.let {
+                        displayLines(it)
                     }
-                    pageLines.addView(blurView)
                 }
             }
+        }
+        
+        // 切换标签时自动滚动到底部
+        scrollView.post {
+            scrollView.fullScroll(View.FOCUS_DOWN)
         }
     }
 
@@ -826,10 +894,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 分享应用
     private fun shareApp() {
+        // 分享后自动解锁
+        hasShared = true
+        saveShareState()
+        refreshUI()
+        
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND
             type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, "我刚用大仙周易抽中了卦象，来看看你的运势如何！")
+            putExtra(Intent.EXTRA_TEXT, "我刚用大仙周易抽中了卦象，来看看你的运势如何！下载地址：https://github.com/daxian10086/1")
         }
         startActivity(Intent.createChooser(shareIntent, "分享大仙周易"))
     }
@@ -841,9 +914,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         refreshUI()
         AlertDialog.Builder(this)
             .setTitle("已重置")
-            .setMessage("下次算卦时需要重新分享才能查看完整内容")
+            .setMessage("下次算卦时需要重新分享或等待10秒才能查看完整内容")
             .setPositiveButton("确定", null)
-            .create()
+            .show()
     }
 
     private fun loadShareState() {
