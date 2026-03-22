@@ -36,12 +36,3 @@ jobs:
       with:
         name: apk-release
         path: app/build/outputs/apk/release/*.apk
-
-    - name: Create Release
-      if: github.event_name == 'push'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: app/build/outputs/apk/release/*.apk
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
