@@ -359,7 +359,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 显示/隐藏摇动提示
     private fun showShakeHint(show: Boolean) {
-        // 摇动提示通过 tvShaking 显示
+        tvShaking.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) {
+            tvShaking.text = "📱 摇动手机开始算卦\n或等待8秒自动开始"
+        }
     }
 
     // 更新摇动状态UI
