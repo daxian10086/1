@@ -48,8 +48,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var ivStickOut: ImageView
     private lateinit var layoutShaking: FrameLayout
     private lateinit var layoutTitle: LinearLayout
-    private lateinit var layoutHexagramInfo: LinearLayout
-    private lateinit var layoutTrigrams: LinearLayout
 
     // 选项页
     private lateinit var tabLines: TextView
@@ -70,8 +68,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvStockContent: TextView
 
     // 新增：摇一摇相关
-    private lateinit var shakeHintLarge: LinearLayout
-    private lateinit var shakeHintText: TextView
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
 
@@ -127,8 +123,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivStickOut = findViewById(R.id.ivStickOut)
         layoutShaking = findViewById(R.id.layoutShaking)
         layoutTitle = findViewById(R.id.layoutTitle)
-        layoutHexagramInfo = findViewById(R.id.layoutHexagramInfo)
-        layoutTrigrams = findViewById(R.id.layoutTrigrams)
 
         // 选项页
         tabLines = findViewById(R.id.tabLines)
@@ -152,13 +146,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        // 尝试查找摇动提示区域（如果布局中存在）
-        try {
-            shakeHintLarge = findViewById(R.id.shakeHintLarge)
-            shakeHintText = findViewById(R.id.shakeHintText)
-        } catch (e: Exception) {
-            // 如果布局中没有这些控件，在代码中动态创建
-        }
     }
 
     private fun setupClickListeners() {
@@ -368,12 +355,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 显示/隐藏摇动提示
     private fun showShakeHint(show: Boolean) {
-        if (::shakeHintLarge.isInitialized) {
-            shakeHintLarge.visibility = if (show) View.VISIBLE else View.GONE
-            if (show) {
-                shakeHintText.text = "📱 摇动手机开始算卦"
-            }
-        }
+        // 摇动提示通过 tvShaking 显示
     }
 
     // 更新摇动状态UI
@@ -594,29 +576,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // 开始10秒广告倒计时
+    // 开始广告倒计时（简化版，直接解锁）
     private fun startAdCountdown(blurView: View) {
-        val countdownText = blurView.findViewById<TextView>(R.id.tvCountdown)
-        var secondsRemaining = 10
-        
-        countdownText?.visibility = View.VISIBLE
-        countdownText?.text = "${secondsRemaining}秒后自动解锁"
-        
-        val countdownRunnable = object : Runnable {
-            override fun run() {
-                secondsRemaining--
-                if (secondsRemaining > 0) {
-                    countdownText?.text = "${secondsRemaining}秒后自动解锁"
-                    adCountdownHandler?.postDelayed(this, 1000)
-                } else {
-                    // 10秒到，自动解锁
-                    countdownText?.text = "正在解锁..."
-                    handleShareUnlock()
-                }
-            }
-        }
-        
-        adCountdownHandler?.postDelayed(countdownRunnable, 1000)
+        // 10秒后自动解锁
+        adCountdownHandler?.postDelayed({
+            handleShareUnlock()
+        }, 10000)
     }
 
     // 显示六爻（根据 hasShared 控制显示）
